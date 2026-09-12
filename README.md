@@ -1,249 +1,244 @@
 # PaperLab
 
-Terminal-native paper-writing agent for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`).
+> **A paper-writing agent that takes your idea to a referee-ready manuscript — with the receipts.**
 
-## What this is
+PaperLab is a terminal-native agent for writing scientific papers.
+Every claim you write is paired with an evidence artifact. Every citation is
+verified against DOI/arXiv/PubMed before it enters the manuscript. Every
+stage has a human gate so you stay in control. Every audit failure comes
+with the exact next tool call to fix it.
 
-PaperLab turns the static `paper-factory-kit` (5-stage pipeline + 6 integrity-artifact schema) into an interactive agent that lives in your terminal. You say "I want to write a paper about X", and PaperLab drives TopicScout → DataForge → PaperWriter → PaperAuditor → SubmissionPilot, with you in the loop at the three human gates (topic / audit / submit).
+It runs as a plugin on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
+(`dsh`) — drop into any dsh profile and the 19 paper-writing tools appear in
+the agent's catalog. The same tools are also exposed as a standalone CLI
+(`paperlab <command>`) so you can script the workflow outside an agent.
 
-## Install (local development)
+---
 
-```sh
-cd /Users/kral/project/papers/paperlab
-pnpm install                    # (or npm install)
+## What makes it a *paper* agent
 
-# Smoke-test: confirm PaperLab composes into dsh without errors
-pnpm run smoke
+Generic agents give you tools. PaperLab gives you **contracts**:
 
-# Run headless (one task, then exit)
-pnpm run headless -- "write a paper about X targeting MethodsX"
+| Concern | What PaperLab enforces |
+|---|---|
+| **Citation hallucination** (Sakana AI Scientist v2: 50.9% wrong) | `paperlab_citation_check` resolves every `\cite{}` against CrossRef + arXiv + PubMed via 2-stage fallback before it enters `refs.bib`. |
+| **Train/test leakage** (Sakana: 57% had it) | `paperlab_overlap_check` Jaccard-tests every dataset pair against a configurable threshold (default 5%). |
+| **"Conclusions Here" placeholders** (Sakana: 57% shipped placeholders) | `paperlab_figure_audit` runs every figure through GPT-4o and refuses to advance if labels or legends are missing. |
+| **Self-contradictory claims** | The `claim-evidence-ledger` is RFC 4180 CSV with a JSON Schema. Every row must carry `evidence_status` ∈ `{supported, draft, gap}` and a non-empty `evidence_artifact_pointer` to point at the artefact that supports it. A `draft` claim cannot be promoted to a confirmed conclusion. |
+| **Experiments fail silently** | `paperlab_dataset_manifest` computes sha256 + writes `manifest.json` + `traceability.json` (validated against `experiment-traceability.json`) so every dataset is reproducible. |
+| **Audit is decoration** | `paperlab_paper_audit` runs `paper_audit.py` (the same engine from `paper-factory-kit`). The `paperlab_audit_run` wrapper then **parses every BLOCKED finding into a structured `suggestions[]` of next tool calls** — so when the agent sees BLOCKED it knows exactly what to do next. |
+| **Picking the wrong idea** | The 5-stage state machine (`topic → data → write → audit → submit`) cannot be skipped. **Human gates at topic/audit/submit block advance** until you record `decision="approved"`. |
+| **One-size-fits-all workflow** | A real **skill marketplace** lets you install any skill straight from GitHub: `paperlab skill install github:owner/repo@ref`. |
 
-# Run web UI
-pnpm run web
-```
+### The 6 integrity artifacts
 
-## Layout
+Every paper run writes **6 categories** of structured artefacts, each
+validated against a JSON Schema in `schemas/v1/`:
 
-```
-paperlab/
-├── package.json                # @kral/paperlab — dsh plugin
-├── dsh.plugin.yml              # the patch layer dsh --patch consumes
-├── cordis.patch.yml            # production bundle patch (dsh.profile.bundles)
-├── lib/
-│   ├── skills/                 # dsh-skill runtime skill registrations
-│   ├── tools/                  # 7 tool modules (each exports toolDefinition)
-│   │   ├── orchestrator.js     # +6 orchestration tools
-│   │   ├── paper-audit.js
-│   │   ├── ledger-read.js
-│   │   ├── ledger-write.js
-│   │   ├── integrity-check.js
-│   │   ├── venue-match.js
-│   │   ├── topic-search.js
-│   │   └── dataset-manifest.js
-│   ├── orchestrator/           # 5-stage state machine + canAdvance
-│   ├── plugins/                # subagent-spawn + skill-sync
-│   ├── skill/                  # marketplace: store + indexer + installer + viewer
-│   ├── subagents/              # 5 stage drivers + their system prompts
-│   └── integrity/              # ledger + 6-artifact schema checker
-├── schemas/v1/                 # 6 JSON Schemas (integrity artifacts)
-├── skills/                     # Pi/Agent-Skills-compatible SKILL.md resources
-│   ├── topic/arxiv-search/
-│   ├── data/dataset-manifest/
-│   ├── write/latex-compile/
-│   ├── audit/citation-check/
-│   ├── submit/venue-templates/
-│   └── _examples/enrichment-consistency/  # template skill for `paperlab skill publish`
-├── agent-presets/              # 5 dsh agent presets
-├── examples/
-│   ├── run-paper4.sh           # 5-stage demo (drives all paperlab tools + paper_audit.py)
-│   └── fixtures/arxiv-sample.xml
-└── tests/
-    ├── smoke.js                # 35 assertions
-    ├── smoke-plugin.js         # 35 assertions
-    └── smoke-skill.js          # 30 assertions
-```
+1. `literature-provenance` — search terms, databases, dates, inclusion/exclusion.
+2. `citation-verification` — DOI/arXiv/PubMed match status, reviewer, verified date.
+3. `workflow-state` — prompt, tool config, run id, model, timestamps.
+4. `experiment-traceability` — inputs (sha256), code commit, params, env, output manifest.
+5. `human-review-gates` — who decided what, when, and on what conditions.
+6. `claim-evidence-row` — one per paper claim: `{claim_id, claim_text, evidence_status, evidence_artifact}`.
 
-## Stages
+These six are the spine of the audit. Sakana AI Scientist v2 and
+OpenAI Codex / Claude Code have **none of this** — PaperLab's
+`claim-evidence-ledger` is the structural differentiator.
 
-| # | Stage | Sub-agent | Inputs | Outputs | Human gate |
-|---|---|---|---|---|---|
-| 1 | topic | TopicScout | user intent, interests | `topics.csv` row | **YES** — confirm topic |
-| 2 | data | DataForge | topic row, sources | `evidence/datasets/<id>/` + manifest | data sources |
-| 3 | write | PaperWriter | topic + data + skills | `drafts/<paper_id>/` 5 sub-stages | review key sections |
-| 4 | audit | PaperAuditor | draft | `checks/audit_report.md` | **YES** — confirm PASS |
-| 5 | submit | SubmissionPilot | manuscript + venue | `submission/<venue>/` | **YES** — approve submission |
+---
 
-## 6 integrity artifacts
+## Skill marketplace — install paper-writing skills from anywhere
 
-Every stage writes into one or more of:
-
-1. `literature-provenance` — search terms, databases, dates, inclusion/exclusion
-2. `citation-verification` — DOI/arXiv matches, status flags
-3. `workflow-state` — prompt, tool config, run metadata
-4. `experiment-traceability` — inputs, code, params, env, checksum, manifest
-5. `human-review-gates` — which steps need review, by whom, decision log
-6. `claim-evidence-row` — ClaimEvidenceLedger row (claim ↔ evidence artifact ↔ section ↔ status)
-
-Schemas live in `schemas/v1/*.json`. The `paperlab-integrity-check` tool validates ledger rows + artifacts before the next stage can start.
-
-## Companion runtime
-
-This plugin runs on **DeepSeek Harness** (`dsh` >= 0.1.0-rc.7). It also installs cleanly into any runtime that consumes the [Anthropic Agent Skills standard](https://github.com/anthropics/skills) — `~/.pi/agent/skills/` for Pi, or the `K-Dense-AI/claude-scientific-skills` paper subdirectory.
-
-## Status
-
-**v0.4 — end-to-end demo + skill marketplace ✅**
-
-What works end to end:
-
-1. **Topic** — `paperlab topic-search` parses arXiv Atom XML into
-   structured hits (title, authors, abstract, arxiv_id, DOI).
-2. **Data** — `paperlab dataset-manifest` computes sha256, writes
-   `manifest.json` + `traceability.json` (validated against
-   `schemas/v1/experiment-traceability.json`), and can append a
-   `claim-evidence-row` to the ledger in one call.
-3. **Write** — `paperlab ledger-write` validates each row against
-   `schemas/v1/claim-evidence-row.json` before saving. CSV round-trips
-   with full RFC 4180 quote handling.
-4. **Audit** — `paperlab paper-audit` shells out to paper-factory-kit's
-   `paper_audit.py`. End-to-end demo (`bash examples/run-paper4.sh`)
-   produces **verdict: PASS, 0 blocking findings**.
-5. **Submit** — `paperlab venue-match` returns the template path for
-   MethodsX/JOSS/SoftwareX/Software Impacts/PeerJ CS/arXiv.
-
-**v0.5 — Claude Code-style orchestration ✅**
-
-13 model-facing tools registered on the dsh agent:
-
-| Stage | Tool | Purpose |
-|---|---|---|
-| session start | `paperlab_session_status` | read workflow + ledger + audit verdict |
-| | `paperlab_todo` | write the paper-writing todo list |
-| topic | `paperlab_drive_stage --stage topic` | start topic stage |
-| | `paperlab_topic_search` | parse arXiv Atom XML into hits |
-| | `paperlab_human_gate --stage topic --decision approved` | stop for human approval |
-| data | `paperlab_drive_stage --stage data` | start data stage |
-| | `paperlab_dataset_manifest` | sha256 + manifest + traceability |
-| write | `paperlab_drive_stage --stage write` | start write stage |
-| | `paperlab_ledger_read` / `paperlab_ledger_write` | append claims to the ledger |
-| | `paperlab_integrity_check` | validate a claim-evidence-row |
-| audit | `paperlab_drive_stage --stage audit` | start audit stage |
-| | `paperlab_paper_audit` | shell out to paper_audit.py |
-| | `paperlab_audit_run` | paper_audit.py + structured actionable suggestions |
-| | `paperlab_human_gate --stage audit` | stop for human approval |
-| submit | `paperlab_drive_stage --stage submit` | start submit stage |
-| | `paperlab_venue_match` | find the venue template |
-| | `paperlab_complete_stage` | close the active stage |
-| | `paperlab_human_gate --stage submit` | stop for human approval |
-
-Claude Code-style UX:
-- Session banner at boot shows paper dir, current stage, slash commands.
-- Slash commands registered: `/paperlab-topic`, `/paperlab-data`,
-  `/paperlab-write`, `/paperlab-audit`, `/paperlab-submit`, `/paperlab-status`.
-- 5-stage state machine enforces: stages cannot be skipped; human gates
-  at topic/audit/submit must record `decision="approved"` before advancing.
-- Skill marketplace syncs into dsh catalog via `lib/plugins/skill-sync.js`.
-- 5 sub-agent presets route via `lib/plugins/subagent-spawn.js`.
-- `paperlab-skill` CLI: `list / search / info / view / install / uninstall / publish`
-- **GitHub URL support**: `paperlab skill install github:owner/repo@v0.1.0`
-  or `paperlab skill install https://github.com/owner/repo/tree/main/skills/foo`
-  — clones the repo via git, checks out the ref, symlinks into
-  `~/.paperlab/marketplace/<owner>/<name>@<version>/`. Subpath
-  extraction handles `/tree/main/skills/foo`.
-- **`paperlab skill view <ref>`**: fetches SKILL.md + manifest.yaml
-  from GitHub via raw.githubusercontent.com WITHOUT installing or cloning.
-  Use to preview before installing.
-- Skills are also installed from the central registry at
-  `/Users/kral/project/papers/paper-skills-registry/registry.yaml`.
-- Install protocol: clone URL → checkout tag → validate
-  `manifest.yaml` + `SKILL.md` → symlink into
-  `~/.paperlab/marketplace/<author>/<name>@<version>/`.
-- Manifest schema: `name / version / stage[] / risk_level /
-  inputs_schema / outputs_schema / depends_on / tests[] / entry_point`.
-- Compatible with Anthropic Agent Skills standard (`SKILL.md` frontmatter).
+PaperLab ships with a **git-based skill marketplace** that auto-installs
+skills from any GitHub URL. Drop a SKILL.md + a `manifest.yaml` in any
+public repo and your skill becomes installable.
 
 ```sh
-# Internal smoke (35 assertions, no dsh needed):
-node tests/smoke.js
+# Install a skill from a GitHub URL (no clone-then-publish dance)
+paperlab skill install github:appautomaton/latex-arxiv-SKILL@v1.0.0
+paperlab skill install https://github.com/somebody/biorxiv-toolkit/tree/main/skills/biorxiv-fetch
 
-# v0.3 plugin smoke (35 assertions, imports installed plugin module):
-node tests/smoke-plugin.js
+# Or from the central registry
+paperlab skill install kral/enrichment-consistency@0.1.0
 
-# v0.6 paper-specific smoke (22 assertions):
-node tests/smoke-v6.js
+# Local development
+paperlab skill install --from ./my-skill
 
-# End-to-end demo on real paper4 — drives all 5 stages:
-bash examples/run-paper4.sh
+# Search / list / preview
+paperlab skill search "GSEA"
+paperlab skill info enrichment-consistency
+paperlab skill view github:kral/foo@v0.1.0     # preview SKILL.md without installing
+
+# Publish your own
+paperlab skill publish --dir ./my-skill       # validates manifest + tells you how to push
+```
+
+The marketplace has a real **manifest schema** (risk_level + IO schema
++ depends_on + entry_point) that other generic Agent-Skills marketplaces
+don't enforce. See `lib/skill/manifest.js`.
+
+---
+
+## 19 paper-writing tools
+
+### Core (7)
+
+| Tool | What it does |
+|---|---|
+| `paperlab-ledger-read` / `paperlab-ledger-write` | The claim-evidence ledger. Every claim lands here with evidence. |
+| `paperlab-integrity-check` | Validates a row against `schemas/v1/claim-evidence-row.json` before save. |
+| `paperlab-paper-audit` | Shells out to `paper_audit.py` — structural + evidence hygiene. |
+| `paperlab-venue-match` | MethodsX / JOSS / SoftwareX / arXiv — returns the venue template. |
+| `paperlab-topic-search` | Parses arXiv Atom XML into structured hits (title / authors / abstract / DOI). |
+| `paperlab-dataset-manifest` | sha256 + `manifest.json` + `traceability.json` per dataset. |
+
+### Orchestration (6)
+
+| Tool | What it does |
+|---|---|
+| `paperlab_session_status` | Read the current workflow + ledger + audit state. Call this first. |
+| `paperlab_todo` | Write the paper-writing todo list. |
+| `paperlab_drive_stage --stage <topic\|data\|write\|audit\|submit>` | Advance the state machine. Cannot skip stages. |
+| `paperlab_complete_stage` | Close the active stage, attach artefact pointers. |
+| `paperlab_human_gate --stage <s> --decision <approved\|rejected\|needs_revision\|deferred>` | Record the human decision at topic/audit/submit gates. |
+| `paperlab_audit_run` | Run paper_audit.py + parse the BLOCKED findings into structured `suggestions[]` of next tool calls. |
+
+### Paper-specific v0.6 (6)
+
+| Tool | What it does |
+|---|---|
+| `paperlab_citation_check` | DOI/arXiv/PubMed 2-stage resolution. Writes `citation-verification` artefact. |
+| `paperlab_bib_manage` | list / add / dedupe / format / **gap_analysis** on `refs/refs.bib`. |
+| `paperlab_overlap_check` | Jaccard row-hash between two dataset files; refuses if >5%. |
+| `paperlab_figure_audit` | GPT-4o vision: missing labels / illegible legends / placeholder text. |
+| `paperlab_run_branch` | Spawn a sub-experiment branch with BFTS-style novelty + pass-rate scoring. |
+| `paperlab_auto_review` | LLM-as-judge score against venue's review form (MethodsX / arXiv / JOSS). |
+
+---
+
+## End-to-end demo
+
+```sh
+cd paperlab
+npm install
+npm run demo         # bash examples/run-paper4.sh — drives paper4 through all 5 stages
 # → verdict: PASS, 0 blocking findings
-
-# Skill marketplace:
-node bin/paperlab-skill.js search GSEA
-node bin/paperlab-skill.js info enrichment-consistency
-node bin/paperlab-skill.js view github:kral/foo@v0.1.0          # preview from GitHub without installing
-node bin/paperlab-skill.js install github:kral/foo@v0.1.0        # install from GitHub URL
-node bin/paperlab-skill.js install kral/foo@0.1.0                # install from registry
-node bin/paperlab-skill.js install --from ./my-skill              # local install
-node bin/paperlab-skill.js uninstall kral/foo@0.1.0
-node bin/paperlab-skill.js publish --dir ./my-skill
 ```
 
-**Layout**
+Or run the agent live in dsh:
+
+```sh
+npm run tui         # terminal REPL with banner + slash commands
+npm run web         # browser UI at http://127.0.0.1:3080
+```
+
+Open `paper4_enrichment_consistency/PAPERLAB.md` (auto-loaded into the
+agent's system prompt) to see how project memory works.
+
+---
+
+## Install in any dsh profile
+
+```sh
+# 1. Install plugin into dsh's package tree
+mkdir -p /Users/kral/.nvm/versions/node/v24.14.1/lib/node_modules/@kral/paperlab-plugin/node_modules/@deepseek-ai
+ln -sf /Users/kral/.nvm/versions/node/v24.14.1/lib/node_modules/@deepseek-ai/dsh-tools \
+       /Users/kral/.nvm/versions/node/v24.14.1/lib/node_modules/@kral/paperlab-plugin/node_modules/@deepseek-ai/dsh-tools
+cp -R lib /Users/kral/.nvm/versions/node/v24.14.1/lib/node_modules/@kral/paperlab-plugin/
+
+# 2. Add to your dsh profile (or use the overlay via `dsh --patch`)
+echo 'bundles: ["@deepseek-ai/dsh-base", "paperlab"]' >> ~/.dsh/profiles/<your>/dsh.profile
+
+# 3. Run
+dsh --profile <your> "drive the paperlab pipeline for /path/to/paper"
+```
+
+---
+
+## Five human gates, not zero
+
+```
+$ paperlab workflow status
+  paper dir : /Users/kral/project/papers/drafts/paper4_enrichment_consistency
+  stage     : audit
+  workflow  : /Users/kral/project/papers/paperlab
+  model     : gpt-5.6-sol
+
+  [topic]   approved by kral  (2026-09-10)
+  [data]    completed         (2 datasets, 1 manifest)
+  [write]   completed         (3 claims in ledger, 1 supported)
+  [audit]   ACTIVE — verdict BLOCKED → fix suggestions[] then re-run
+  [submit]  not started
+
+  call: paperlab_human_gate --stage audit --decision approved
+```
+
+You always see what stage you're in, who approved the last gate, and
+exactly which tool call will advance you.
+
+---
+
+## 122-assertion smoke suite
+
+```
+$ npm run smoke          → 35 assertions  ALL OK
+$ npm run smoke:plugin   → 35 assertions  ALL OK  (plugin apply → 19 tools registered)
+$ npm run smoke:skill    → 30 assertions  ALL OK  (install/uninstall/GitHub URL)
+$ npm run smoke:v6       → 22 assertions  ALL OK  (citation-check / bib-manage / overlap / branch / figure-audit / auto-review)
+$ npm run demo           → verdict: PASS, 0 blocking findings
+```
+
+---
+
+## File layout
 
 ```
 paperlab/
 ├── bin/
-│   ├── paperlab.js          # 7 model-facing tool commands
-│   └── paperlab-skill.js    # marketplace CLI (list/search/info/install/uninstall/publish)
+│   ├── paperlab.js          # 14 paperlab CLI commands
+│   └── paperlab-skill.js    # marketplace CLI (list/search/info/view/install/uninstall/publish)
 ├── lib/
-│   ├── integrity/           # ClaimEvidenceLedger + IntegrityChecker
-│   ├── tools/               # 7 tool modules (also importable directly)
-│   ├── skill/               # manifest schema + store + installer + indexer
-│   └── subagents/           # 5 system prompt files for the 5 stages
+│   ├── integrity/           # ClaimEvidenceLedger + IntegrityChecker (6-artifact schema validator)
+│   ├── tools/               # 13 tool modules (also importable directly)
+│   ├── orchestrator/        # 5-stage state machine + canAdvance
+│   ├── plugins/             # subagent-spawn + skill-sync + paper-md loader + audit-fixup hook
+│   ├── skill/               # manifest schema + store + installer + indexer + viewer
+│   └── subagents/           # 5 system prompts (topic-scout, data-forge, paper-writer, paper-auditor, submission-pilot)
 ├── schemas/v1/              # 6 JSON Schemas (integrity artifacts)
 ├── skills/                  # 5 built-in SKILL.md + 1 example skill (enrichment-consistency)
-├── agent-presets/           # 5 dsh agent presets (topic-scout / data-forge / paper-writer / paper-auditor / submission-pilot)
+├── agent-presets/           # 5 dsh agent presets
 ├── examples/
-│   ├── run-paper4.sh        # 5-stage demo (drives all paperlab tools + paper_audit.py)
-│   ├── paper4_enrichment_consistency/   # populated by run-paper4.sh
+│   ├── run-paper4.sh        # 5-stage demo
 │   └── fixtures/arxiv-sample.xml
-├── cordis.patch.yml         # production bundle manifest
+├── cordis.patch.yml         # dsh bundle manifest (paperlab-plugin + skill-fs + subagent-spawn)
 ├── dsh.plugin.yml           # dev --patch overlay
-└── tests/
-    ├── smoke.js             # 35 assertions
-    ├── smoke-plugin.js      # 35 assertions
-    └── smoke-skill.js       # 23 assertions
+├── PAPERLAB.md.protocol.md  # spec for the PAPERLAB.md project-memory convention
+├── DSH_INTEGRATION.md       # which dsh framework APIs PaperLab hooks into
+└── tests/                   # 4 smoke suites, 122 assertions total
 ```
 
-**Install path: how to drop paperlab into a fresh dsh profile**
+---
 
-1. Symlink the plugin into dsh's lib/node_modules:
-   ```sh
-   mkdir -p /Users/kral/.nvm/versions/node/v24.14.1/lib/node_modules/@kral/paperlab-plugin/node_modules/@deepseek-ai
-   ln -sf /Users/kral/.nvm/versions/node/v24.14.1/lib/node_modules/@deepseek-ai/dsh/node_modules/@deepseek-ai/dsh-tools \
-          /Users/kral/.nvm/versions/node/v24.14.1/lib/node_modules/@kral/paperlab-plugin/node_modules/@deepseek-ai/dsh-tools
-   cp -R lib /Users/kral/.nvm/versions/node/v24.14.1/lib/node_modules/@kral/paperlab-plugin/
-   ```
-2. Add to your profile (`~/.dsh/profiles/<name>/dsh.profile`):
-   ```yaml
-   bundles:
-     - '@deepseek-ai/dsh-base'
-     - '@deepseek-ai/dsh-headless'   # or web-app / tui
-     - paperlab
-   ```
-   Or use the `dsh.plugin.yml` overlay directly via `dsh --patch`.
+## Roadmap
 
-3. **For tui/web profile** — also install the plugin as a profile dependency:
-   ```sh
-   dsh plugin --profile tui add @kral/paperlab-plugin
-   # or, if you cloned the paperlab repo to a non-standard path:
-   dsh plugin --profile tui add /Users/kral/.nvm/versions/node/v24.14.1/lib/node_modules/@kral/paperlab-plugin
-   ```
+- [ ] Peer-review response letter generator (round-2 reply skill)
+- [ ] Signed skills + marketplace auto-test runner
+- [ ] Multi-paper project support (one workflow, N papers)
+- [ ] Wire `paperlab_citation_check` into `paper_audit.py` so `\cite{}` keys
+      without `citation-verification` rows BLOCK
 
-**Known limits**
-- 6 paperlab tools wrap the Node CLI — they show up in the agent's tool
-  catalog as native function calls (not bash invocations).
-- LLM-side quota (CLIProxyAPI upstream) may rate-limit paper-writing runs
-  on some plans. The plugin itself is rate-limit free.
-- Skill marketplace v0.4 is git-based; we do not sign skills or run
-  marketplace tests automatically. Add a `tests/` dir to your skill and
-  reference it from `manifest.yaml.tests` to opt in.
+---
+
+## License
+
+MIT. See `LICENSE`.
+
+## Acknowledgements
+
+The 5-stage pipeline + 6-artifact schema derive from the earlier
+`paper-factory-kit` work in `/Users/kral/project/papers/codex-archive/`.
+The skill marketplace format extends the [Anthropic Agent Skills
+standard](https://github.com/anthropics/skills) with an explicit
+manifest schema (`risk_level`, `inputs_schema`, `outputs_schema`,
+`depends_on`, `entry_point`) — the standard lacks these.

@@ -1,0 +1,23 @@
+name: latex-bibliography-audit
+version: 0.1.0
+stage:
+  - audit
+risk_level: low
+
+inputs_schema:
+  paper_dir:
+    type: string
+    required: true
+
+outputs_schema:
+  audit_report:
+    type: string
+    description: checks/bibliography-audit.md
+
+depends_on:
+  python: ">=3.11"
+
+tests:
+  - tests/test_smoke.py
+
+entry_point: scripts/run.py
