@@ -1,0 +1,11 @@
+{
+  "run_id": "paperlab-demo-1789178594",
+  "started_at": "2026-09-12T02:03:14Z",
+  "dsh_version": "0.1.0-rc.7",
+  "paperlab_version": "0.4.0",
+  "model": { "provider": "demo", "name": "offline" },
+  "tools_loaded": ["paperlab_topic_search","paperlab_dataset_manifest","paperlab_ledger_write","paperlab_venue_match","paperlab_paper_audit"],
+  "skills_loaded": ["topic/arxiv-search","data/dataset-manifest","write/latex-compile","audit/citation-check","submit/venue-templates"],
+  "subagents_used": ["topic-scout","data-forge","paper-writer","paper-auditor","submission-pilot"],
+  "working_directory": "/Users/kral/project/papers/paperlab/examples/paper4_enrichment_consistency"
+}

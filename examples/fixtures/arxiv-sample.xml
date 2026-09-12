@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <entry>
+    <id>http://arxiv.org/abs/2401.01234v1</id>
+    <title>Cross-tool concordance of GSEA methods on simulated DE inputs</title>
+    <summary>We compare ORA and preranked GSEA across gseapy, enrichr, and g:Profiler.</summary>
+    <published>2024-01-15T00:00:00Z</published>
+    <updated>2024-01-15T00:00:00Z</updated>
+    <arxiv:doi>10.1234/example</arxiv:doi>
+    <arxiv:primary_category term="q-bio.QM"/>
+    <author><name>Smith J.</name></author>
+    <author><name>Doe A.</name></author>
+  </entry>
+</feed>

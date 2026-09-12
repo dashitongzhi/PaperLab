@@ -1,0 +1,45 @@
+{
+  "ok": true,
+  "rows": [
+    {
+      "claim_id": "C001",
+      "section": "results",
+      "claim_text": "gseapy_ora and gprofiler produced concordant top-10 pathways on synthetic DE inputs.",
+      "evidence_status": "supported",
+      "evidence_artifact_type": "code_output",
+      "evidence_artifact_pointer": "drafts/paper4_enrichment_consistency/evidence/datasets/D001/traceability.json",
+      "reviewer": "paper-writer",
+      "updated_at": "2026-09-12T02:03:14.477Z",
+      "__line": 2
+    },
+    {
+      "claim_id": "C002",
+      "section": "results",
+      "claim_text": "Methodological choices — gene-set size filter, multiple-testing correction, ranking metric — explain more disagreement than tool identity.",
+      "evidence_status": "draft",
+      "evidence_artifact_type": "",
+      "evidence_artifact_pointer": "",
+      "reviewer": "paper-writer",
+      "updated_at": "2026-09-12T02:03:14.539Z",
+      "__line": 3
+    },
+    {
+      "claim_id": "C003",
+      "section": "discussion",
+      "claim_text": "Concordance across tools improves when methods agree on ranking metric and background gene set.",
+      "evidence_status": "draft",
+      "evidence_artifact_type": "",
+      "evidence_artifact_pointer": "",
+      "reviewer": "paper-writer",
+      "updated_at": "2026-09-12T02:03:14.588Z",
+      "__line": 4
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "by_status": {
+      "supported": 1,
+      "draft": 2
+    }
+  }
+}

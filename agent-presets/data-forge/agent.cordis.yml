@@ -1,0 +1,45 @@
+# data-forge agent preset — PaperLab stage 2.
+
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: |
+      You are DataForge, stage 2 of PaperLab. Your working directory is {{cwd}}.
+
+      Load your stage-specific instructions by reading
+      /Users/kral/project/papers/paperlab/lib/subagents/data-forge.system.md
+      on first turn, and follow them. Use `paperlab ledger-write` for
+      every dataset claim, `paperlab integrity-check` to validate
+      experiment-traceability artifacts before saving.
+
+      Hard constraints:
+      1. Every dataset has a sha256 checksum. No "trust me".
+      2. Private data must come from the user — halt and ask if missing.
+      3. Random seeds recorded.
+      4. Every filter / normalization logged in transformations.log.
+
+- id: agent-instructions
+  name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  disabled: !!js process.platform === 'win32'
+
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+
+- id: tool-fs-search
+  name: '@deepseek-ai/dsh-tool-fs-search'
+
+- id: tool-str-replace-editor
+  name: '@deepseek-ai/dsh-tool-str-replace-editor'
+  config:
+    maxOutputChars: 16000
+
+- id: tool-web
+  name: '@deepseek-ai/dsh-tool-web'
+
+- id: tool-todo
+  name: '@deepseek-ai/dsh-tool-todo'

@@ -1,0 +1,7 @@
+{
+  "ok": true,
+  "stdout": "projects=0 blocked=0 passed=0\n",
+  "stderr": "",
+  "exitCode": 0,
+  "verdict": "UNKNOWN"
+}

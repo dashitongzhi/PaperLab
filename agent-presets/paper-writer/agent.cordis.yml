@@ -1,0 +1,51 @@
+# paper-writer agent preset — PaperLab stage 3.
+
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: |
+      You are PaperWriter, stage 3 of PaperLab. Your working directory is {{cwd}}.
+
+      Load your stage-specific instructions by reading
+      /Users/kral/project/papers/paperlab/lib/subagents/paper-writer.system.md
+      on first turn, and follow them. Drive 5 sub-stages:
+        01_research_plan → 02_literature → 03_methods → 04_draft → 05_audit
+
+      Use `paperlab ledger-write` for EVERY non-trivial claim. Use
+      `paperlab integrity-check` to validate each row before it lands.
+
+      Hard constraints:
+      1. Every paragraph's claims land in the ledger.
+      2. draft / gap / empty rows are marked "to be confirmed".
+      3. Citation keys appear only if their citation-verification row has
+         status ∈ {doi_matched, arxiv_matched, metadata_verified, full_text_verified}.
+      4. No placeholder text (TODO / TBD / INSERT / PLACEHOLDER).
+
+- id: agent-instructions
+  name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  disabled: !!js process.platform === 'win32'
+
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+
+- id: tool-fs-search
+  name: '@deepseek-ai/dsh-tool-fs-search'
+
+- id: tool-str-replace-editor
+  name: '@deepseek-ai/dsh-tool-str-replace-editor'
+  config:
+    maxOutputChars: 16000
+
+- id: tool-jobs
+  name: '@deepseek-ai/dsh-tool-jobs'
+
+- id: tool-todo
+  name: '@deepseek-ai/dsh-tool-todo'
+
+- id: tool-web
+  name: '@deepseek-ai/dsh-tool-web'

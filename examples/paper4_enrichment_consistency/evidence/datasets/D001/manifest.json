@@ -1,0 +1,12 @@
+{
+  "id": "D001",
+  "title": "Synthetic DE input (500 genes, seed=42)",
+  "description": "500-gene differential expression table with log2fc and padj, used to compare ORA vs preranked GSEA across gseapy/enrichr/g:Profiler.",
+  "source_type": "computed",
+  "source_url": null,
+  "local_path": "/Users/kral/project/papers/paperlab/examples/paper4_enrichment_consistency/evidence/datasets/synthetic_de_input.tsv",
+  "license": "CC-BY-4.0",
+  "checksum": "sha256:4fd09dc232d767374d186d14686eddb2ccdcfd7bb180a9630c18696efa06a80b",
+  "bytes": 13642,
+  "created_at": "2026-09-12T02:03:14.417Z"
+}

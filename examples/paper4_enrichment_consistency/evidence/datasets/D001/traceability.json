@@ -1,0 +1,30 @@
+{
+  "experiment_id": "E001",
+  "inputs": [
+    {
+      "pointer": "/Users/kral/project/papers/paperlab/examples/paper4_enrichment_consistency/evidence/datasets/synthetic_de_input.tsv",
+      "checksum": "sha256:4fd09dc232d767374d186d14686eddb2ccdcfd7bb180a9630c18696efa06a80b",
+      "bytes": 13642
+    }
+  ],
+  "code": {
+    "repo": "paperlab",
+    "commit": "unknown",
+    "entrypoint": "paperlab/lib/tools/dataset-manifest.js",
+    "params": {
+      "dataset_id": "D001",
+      "source_type": "computed"
+    }
+  },
+  "output": {
+    "pointer": "/Users/kral/project/papers/paperlab/examples/paper4_enrichment_consistency/evidence/datasets/D001/manifest.json",
+    "checksum": "sha256:4fd09dc232d767374d186d14686eddb2ccdcfd7bb180a9630c18696efa06a80b",
+    "manifest": "/Users/kral/project/papers/paperlab/examples/paper4_enrichment_consistency/evidence/datasets/D001/manifest.json"
+  },
+  "env": {
+    "language": "node",
+    "version": "v24.14.1"
+  },
+  "ran_at": "2026-09-12T02:03:14.418Z",
+  "ran_by": "paperlab-dataset-manifest"
+}

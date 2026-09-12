@@ -1,0 +1,35 @@
+# PaperLab — `--patch` overlay (dev shortcut).
+#
+# For PRODUCTION use, register paperlab as a bundle in your profile's
+# `dsh.profile.bundles` instead of using this overlay:
+#
+#   # ~/.dsh/profiles/<your-profile>/dsh.profile
+#   bundles:
+#     - '@deepseek-ai/dsh-base'
+#     - '@deepseek-ai/dsh-headless'   # or web-app / tui
+#     - paperlab
+#
+# This file exists for local dev where you want to compose paperlab
+# onto a fresh profile without editing dsh.profile.
+#
+# IMPORTANT: dsh-base already registers dsh-skill-filesystem, dsh-goal,
+# dsh-goal-round-driver, and dsh-subagent-spawn-in-process. We only add:
+#   - The paperlab plugin (6 model-facing tools + prompt section)
+#   - A second roots entry on the existing skill-filesystem provider
+#     via a config override (not a duplicate provider registration)
+#   - Subagent provider alias "paperlab-spawn" — same backend, named
+#     handle so paperlab agent-presets can target it.
+
+- id: paperlab-skill-filesystem
+  config:
+    roots:
+      - /Users/kral/project/papers/papers/paperlab/skills
+      - /Users/kral/project/papers/paperlab/skills
+
+- id: paperlab-plugin
+  name: '@kral/paperlab-plugin'
+
+- id: paperlab-subagent-spawn
+  name: '@deepseek-ai/dsh-subagent-spawn-in-process'
+  config:
+    providerName: paperlab-spawn

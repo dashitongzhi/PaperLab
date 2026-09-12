@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "dataset_id": "D001",
+  "manifest_path": "/Users/kral/project/papers/paperlab/examples/paper4_enrichment_consistency/evidence/datasets/D001/manifest.json",
+  "traceability_path": "/Users/kral/project/papers/paperlab/examples/paper4_enrichment_consistency/evidence/datasets/D001/traceability.json",
+  "checksum": "sha256:4fd09dc232d767374d186d14686eddb2ccdcfd7bb180a9630c18696efa06a80b",
+  "bytes": 13642,
+  "ledger": {
+    "ledger": "/Users/kral/project/papers/paperlab/examples/paper4_enrichment_consistency/evidence/claim_evidence_ledger.csv",
+    "summary": {
+      "total": 3,
+      "by_status": {
+        "supported": 1,
+        "draft": 2
+      }
+    }
+  }
+}

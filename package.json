@@ -1,0 +1,57 @@
+{
+  "name": "paperlab",
+  "version": "0.6.0",
+  "description": "PaperLab — terminal-native paper-writing agent for dsh. 5-stage pipeline (topic → data → write → audit → submit) over a 6-category integrity-artifact schema. v0.6 adds paper-specific tools (citation check / bib manage / overlap / figure audit / BFTS branch / auto-review) plus PAPERLAB.md memory + audit-fixup hook.",
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "keywords": ["dsh-plugin","dsh-bundle","paper-agent","research","scientific-writing","integrity-artifacts"],
+  "repository": { "type": "git", "url": "https://github.com/kral/paperlab" },
+
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "plugin": "./dsh.plugin.yml"
+  },
+
+  "bin": {
+    "paperlab":      "./bin/paperlab.js",
+    "paperlab-skill": "./bin/paperlab-skill.js"
+  },
+
+  "scripts": {
+    "smoke":         "node tests/smoke.js",
+    "smoke-plugin":  "node tests/smoke-plugin.js",
+    "smoke-skill":   "node tests/smoke-skill.js",
+    "smoke-v6":      "node tests/smoke-v6.js",
+    "smoke-cli":     "node bin/paperlab.js venue-match --venue MethodsX",
+    "smoke-bundle":  "dsh --dump-config --profile headless --patch ./dsh.plugin.yml 2>&1 | grep -E '(paperlab|not found)' || echo SMOKE_OK",
+    "headless":      "dsh --profile headless --patch ./dsh.plugin.yml",
+    "web":           "dsh --profile web --patch ./dsh.plugin.yml",
+    "tui":           "dsh --profile tui --patch ./dsh.plugin.yml",
+    "demo":          "bash examples/run-paper4.sh",
+    "mock":          "python3 scripts/mock-llm.py"
+  },
+
+  "dependencies": {
+    "ajv": "^8.17.0",
+    "ajv-formats": "^3.0.1",
+    "yaml": "^2.6.0"
+  },
+
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1"
+  },
+
+  "files": [
+    "bin/",
+    "lib/",
+    "schemas/",
+    "skills/",
+    "agent-presets/",
+    "cordis.patch.yml",
+    "dsh.plugin.yml",
+    "examples/",
+    "README.md",
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,3 @@
+name: DataForge
+description: PaperLab stage 2 — acquire / hash / manifest every dataset the paper will rely on.
+order: 101

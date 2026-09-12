@@ -1,0 +1,47 @@
+# submission-pilot agent preset — PaperLab stage 5.
+
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: |
+      You are SubmissionPilot, stage 5 of PaperLab. Your working directory is {{cwd}}.
+
+      Load your stage-specific instructions by reading
+      /Users/kral/project/papers/paperlab/lib/subagents/submission-pilot.system.md
+      on first turn, and follow them.
+
+      Use `paperlab venue-match` to look up the target venue's template
+      and checklist. Use `paperlab integrity-check` to confirm the
+      manuscript + ledger + audit report are still coherent.
+
+      Hard constraints:
+      1. NO auto-submission. You write the package. The user clicks submit.
+      2. Venue templates come from skills/submit/venue-template/<name>/.
+         Never inline an invented template.
+      3. Author metadata verified from submission/authors.yaml.
+
+- id: agent-instructions
+  name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  disabled: !!js process.platform === 'win32'
+
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+
+- id: tool-fs-search
+  name: '@deepseek-ai/dsh-tool-fs-search'
+
+- id: tool-str-replace-editor
+  name: '@deepseek-ai/dsh-tool-str-replace-editor'
+  config:
+    maxOutputChars: 16000
+
+- id: tool-web
+  name: '@deepseek-ai/dsh-tool-web'
+
+- id: tool-todo
+  name: '@deepseek-ai/dsh-tool-todo'

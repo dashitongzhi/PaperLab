@@ -1,0 +1,69 @@
+# PaperLab — dsh bundle patch
+#
+# This file is a `dsh.bundle.patch` (consumed by `loadProfile` when PaperLab
+# is listed in a profile's `dsh.profile.bundles`). It composes PaperLab
+# onto any dsh-base + mode-bundle profile.
+#
+# What this patch contributes:
+#   1. PaperLab's local skills as a dsh skill provider (filesystem-backed)
+#   2. PaperLab's CLI tools as a dsh tool category (bash-runnable, see below)
+#   3. PaperLab's 5 sub-agent presets (in agent-presets/)
+#   4. PaperLab's 6-tool CLI library (lib/tools/*.js → runnable from tool-bash)
+#
+# Architecture note: dsh tools are TypeScript plugins registered through
+# `@deepseek-ai/dsh-tools`'s `defineTool`. A v0.2 paperlab bundle is
+# intentionally TOOL-LIGHT — we do NOT register 6 dsh tools. Instead we
+# expose the lib as runnable Node CLI commands, and let the dsh agent
+# invoke them via `tool-bash`. This keeps the bundle fully declarative
+# (no TS build, no version lock-in) and the tools stay 100% reusable
+# outside dsh. The 5 sub-agents and 5 SKILL.md resources are declarative.
+#
+# In v0.3 the 6 tools will become real dsh tools (TypeScript plugins)
+# once we lock the dsh version and write `defineTool` adapters.
+
+- insert:
+
+    # ─── 1. Skill provider ───────────────────────────────────────────────────
+    # dsh-skill-filesystem is the shipped local-FS skill provider. By listing
+    # paperlab's skills/ root here, every dsh profile that includes paperlab
+    # gets all 5 SKILL.md resources catalogued automatically.
+    - id: paperlab-skill-filesystem
+      name: '@deepseek-ai/dsh-skill-filesystem'
+      config:
+        roots:
+          - /Users/kral/project/papers/paperlab/skills
+
+    # ─── 2. Goal driver hint ─────────────────────────────────────────────────
+    # dsh's goal driver lives in dsh-base. We contribute one goal schema so
+    # the agent can declare a write-paper goal. dsh-goal accepts arbitrary
+    # goal names via runtime registration; we add a one-line hint as a system
+    # prompt section so the model knows the canonical 5-stage flow.
+    - id: paperlab-goal-hint
+      name: '@deepseek-ai/dsh-system-prompt'
+      config:
+        sections:
+          paperlab-goal:
+            order: 50
+            text: |
+              When the user wants to write a paper, drive the canonical
+              PaperLab 5-stage pipeline: topic → data → write → audit → submit.
+              Use the paperlab-* skills for stage-specific guidance and the
+              paperlab CLI in lib/tools/ for ledger / integrity / audit work.
+
+    # ─── 3. Audit instrumentation ────────────────────────────────────────────
+    # Each paper-writing run appends workflow-state.json to drafts/<id>/
+    # so the run is reproducible. We register a tiny tool that wraps the
+    # Node CLI as a bash-callable script — keeps the bundle declarative.
+    - id: paperlab-cli-wrapper
+      name: '@deepseek-ai/dsh-tool-bash'
+      disabled: !!js process.platform === 'win32'
+      config:
+        paperlab:
+          entry: /Users/kral/project/papers/paperlab/bin/paperlab.js
+          allowed_commands:
+            - ledger-read
+            - ledger-write
+            - integrity-check
+            - paper-audit
+            - venue-match
+            - topic-search

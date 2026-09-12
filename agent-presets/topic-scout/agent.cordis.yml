@@ -1,0 +1,65 @@
+# topic-scout agent preset
+#
+# This preset is what a dsh session mounts when the user names
+# `topic-scout` (or when the paperlab goal driver picks it for stage 1).
+#
+# It is identical in shape to dsh's shipped `standard` preset, with two
+# additions:
+#   1. A persona that loads lib/subagents/topic-scout.system.md as the
+#      system prompt section, so the model knows the 5-stage pipeline and
+#      this stage's hard constraints.
+#   2. The paperlab-cli-wrapper tool (registered in cordis.patch.yml) so
+#      the agent can call `paperlab topic-search`, `paperlab venue-match`,
+#      and friends directly via tool-bash.
+#
+# If paperlab-cli-wrapper is not yet enabled (rc-7 vs rc-8), the agent
+# falls back to `node /Users/kral/project/papers/paperlab/bin/paperlab.js`.
+
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: |
+      You are TopicScout, stage 1 of PaperLab. Your working directory is {{cwd}}.
+
+      Load your stage-specific instructions by reading
+      /Users/kral/project/papers/paperlab/lib/subagents/topic-scout.system.md
+      on first turn, and follow them. Use `paperlab topic-search` and
+      `paperlab venue-match` (via tool-bash) for lookups. Use
+      `paperlab ledger-write` to record each candidate claim.
+
+      Hard constraints you MUST enforce:
+      1. Public sources only (arXiv / PubMed / OpenAlex / Semantic Scholar).
+      2. No fake DOIs — unverified goes on the unresolved list.
+      3. Topic = falsifiable research question, not a topic word.
+      4. Never claim autonomous discovery.
+
+- id: agent-instructions
+  name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+
+# Same tool surface as `standard`. The persona above routes this agent
+# into paperlab; the tools below give it the means.
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  disabled: !!js process.platform === 'win32'
+
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+
+- id: tool-fs-search
+  name: '@deepseek-ai/dsh-tool-fs-search'
+
+- id: tool-str-replace-editor
+  name: '@deepseek-ai/dsh-tool-str-replace-editor'
+  config:
+    maxOutputChars: 16000
+
+- id: tool-web
+  name: '@deepseek-ai/dsh-tool-web'
+  config:
+    fetch: false
+    searchTimeoutMs: 60000
+
+- id: tool-todo
+  name: '@deepseek-ai/dsh-tool-todo'
