@@ -1,5 +1,9 @@
 # PaperLab
 
+<p align="center">
+  <img src="assets/logo.png" alt="PaperLab logo" width="180" />
+</p>
+
 > **A paper-writing agent that takes your idea to a referee-ready manuscript — with the receipts.**
 
 PaperLab is a terminal-native agent for writing scientific papers.
