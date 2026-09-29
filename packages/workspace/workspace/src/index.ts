@@ -256,11 +256,20 @@ export class WorkspaceRegistry extends Service {
   initializeDefault(resolveDirectory: () => Promise<string>): Promise<Workspace | undefined> {
     return this.enqueueOperation(async () => {
       const state = this.requireState()
-      if (state.defaultWorkspaceId !== undefined) return this.entities.get(state.defaultWorkspaceId)
+      if (state.defaultWorkspaceId !== undefined) {
+        const registered = this.entities.get(state.defaultWorkspaceId)
+        // A dangling default id (registration table lost, the registration
+        // deleted, or hand-edited) must not wedge re-initialization: treat it
+        // as unset and recreate below regardless of existing sessions — the
+        // deleted registration is exactly the signal the user wants it back.
+        if (registered !== undefined) return registered
+        state.defaultWorkspaceId = undefined
+      } else if (state.workspaceIds.length > 0 || state.archivedSessionIds.length > 0) {
+        // Never had a default and already has workspaces: leave that alone.
+        return undefined
+      }
       const sessions = this.ctx.get('sessions')
       if (sessions === undefined) throw new Error('default Workspace initialization requires the Session store')
-      if (state.workspaceIds.length > 0 || state.archivedSessionIds.length > 0
-        || sessions.list().length > 0 || (await this.listStoredHeaders()).length > 0) return undefined
 
       const path = await resolveDirectory()
       if (!fullyQualifiedWorkspacePath(path)) throw new TypeError(`Workspace path is not fully qualified: '${path}'`)
