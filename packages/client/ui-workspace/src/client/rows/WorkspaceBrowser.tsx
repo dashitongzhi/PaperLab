@@ -217,13 +217,15 @@ function workspaceGroupHalf(e: { clientY: number; currentTarget: HTMLElement }):
 type SessionTreeProps = Pick<
   WorkspaceBrowserProps,
   'useSessionStatus' | 'startSession' | 'open'
-  | 'insertWorkspaceBefore' | 't' | 'usePanelInfo'
+  | 'insertWorkspaceBefore' | 't' | 'usePanelInfo' | 'requestAddWorkspace'
 > & PropsRenderSlots<
   | 'sidebar.workspaces.session.menu.item'
   | 'sidebar.workspaces.session.row.action'
   | 'sidebar.session.row.leading'
   | 'sidebar.session.row.hover'
 > & {
+  /** Whether a directory picker flow can open (from the browser root's hook). */
+  directoryFlowAvailable: boolean
   shortcuts: readonly import('@deepseek-ai/dsh-client-shortcuts/client').ShortcutCatalogEntry[]
   /** Always-mounted Session list snapshot. */
   list: SessionListState
@@ -284,6 +286,7 @@ function SessionTree({
   workspaceReady, animationResetKey, usePanelInfo,
   onRenameRequest, onDeleteRequest, onSessionRenameRequest,
   renderSlot,
+  requestAddWorkspace, directoryFlowAvailable,
   insertWorkspaceBefore,
   nestWorkspaces, groupExpansion, setGroupExpanded,
   setSessionOrder, home, t,
@@ -604,7 +607,56 @@ function SessionTree({
     )
   }
 
-  const groupRows = rootGroups.map(group => renderGroup(group, 0))
+  // PaperLab: two sibling sections — standalone sessions (the ungrouped
+  // bucket) and workspace projects — each with its own header and add button,
+  // so a plain chat never lives under a folder and a paper project never
+  // looks like a chat.
+  const standaloneGroups = rootGroups.filter(group => group.workspaceId === undefined)
+  const workspaceGroups = rootGroups.filter(group => group.workspaceId !== undefined)
+  const groupRows = (
+    <>
+      {(standaloneGroups.length > 0 || workspaceGroups.length === 0) && (
+        <div className={css.listSection} data-section="sessions">
+          <div className={css.listSectionHead}>
+            <span className={css.listSectionTitle}>{t('section.sessions')}</span>
+            <Tooltip label={t('session.standalone')} side="bottom" delayMs={500}>
+              <button
+                type="button"
+                className={css.listSectionAdd}
+                aria-label={t('session.standalone')}
+                onClick={() => { startSession() }}
+              >
+                <IconEditOutlineRegular size={14} />
+              </button>
+            </Tooltip>
+          </div>
+          {standaloneGroups.length > 0
+            ? standaloneGroups.map(group => renderGroup(group, 0))
+            : <div className={css.listSectionEmpty}>{t('session.standalone.empty')}</div>}
+        </div>
+      )}
+      <div className={css.listSection} data-section="workspaces">
+        <div className={css.listSectionHead}>
+          <span className={css.listSectionTitle}>{t('section.workspaces')}</span>
+          {directoryFlowAvailable && (
+            <Tooltip label={t('workspace.add')} side="bottom" delayMs={500}>
+              <button
+                type="button"
+                className={css.listSectionAdd}
+                aria-label={t('workspace.add')}
+                onClick={() => { requestAddWorkspace() }}
+              >
+                <IconProjectAddOutlineRegular size={14} />
+              </button>
+            </Tooltip>
+          )}
+        </div>
+        {workspaceGroups.length > 0
+          ? workspaceGroups.map(group => renderGroup(group, 0))
+          : <div className={css.listSectionEmpty}>{t('workspace.add.hint')}</div>}
+      </div>
+    </>
+  )
   return (
     <div className={clsx(css.treeBody, css.wide)}>
       {workspaceDropAtListStart && <span className={css.listTopDropIndicator} aria-hidden="true" />}
@@ -1411,6 +1463,8 @@ export function WorkspaceBrowser({
                 rowState={rowState}
                 onLeaveArchivedOnly={leaveArchivedOnly}
                 startSession={startSession}
+                requestAddWorkspace={requestAddWorkspace}
+                directoryFlowAvailable={directoryFlowAvailable}
                 open={guardedOpen}
                 insertWorkspaceBefore={insertWorkspaceBefore}
                 revealSessionId={revealSessionId}

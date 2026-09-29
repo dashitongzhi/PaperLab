@@ -562,3 +562,12 @@
   line-height: 18px;
   color: var(--dsw-alias-label-tertiary, #838a92);
 }
+
+/* Fill-wrapper: gives the inner .page a definite height to scroll against
+   (the panel component renders this shell as its root; .page scrolls). */
+.shell {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}

@@ -398,7 +398,9 @@ export function SkillsPanel(): React.ReactElement {
     ),
   )
 
-  return h('div', {},
+  // The shell fills the main column (height 100%) so the inner `.page` is the
+  // scroll container; dialog/toast portals are unaffected.
+  return h('div', { className: css.shell },
     detail ?? list,
     dialog,
     toast !== null && h(Toast, {
