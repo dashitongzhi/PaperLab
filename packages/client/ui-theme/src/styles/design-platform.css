@@ -400,3 +400,31 @@ html[data-platform='darwin'] body {
 html[data-platform='darwin'] body[data-ds-dark-theme] {
   --dsw-specific-menu: rgba(48, 49, 54, 0.94);
 }
+
+/* PaperLab display typography: serif headings over the warm paper canvas.
+   Coral accent (#d97757) for primary actions and selected states. */
+body {
+  --paperlab-accent: #d97757;
+  --paperlab-accent-hover: #c4633f;
+  --paperlab-accent-soft: rgba(217, 119, 87, 0.12);
+}
+
+h1,
+h2,
+h3,
+.paperlab-serif-title,
+[data-panel-title],
+section h1,
+section h2,
+section h3 {
+  font-family: var(--dsw-font-family-brand);
+  letter-spacing: -0.01em;
+}
+
+code,
+pre,
+kbd,
+samp,
+.paperlab-mono {
+  font-family: var(--ds-font-family-code);
+}
