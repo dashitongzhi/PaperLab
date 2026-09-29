@@ -279,8 +279,13 @@
     # Plugin management: the sidebar Plugins page installs, enables, disables,
     # and removes the profile's bundles through the `pluginManager` Remote.
     # Without a profile-backed Host it reports itself unavailable.
+    # PaperLab: the DSH plugin-management page is not a PaperLab user surface
+    # (the skills panel serves that role); its sidebar entry is removed. The
+    # package stays in the bundle for the host-side registry remotes it pairs
+    # with.
     - id: ui-plugin-manager
       name: '@deepseek-ai/dsh-client-ui-plugin-manager'
+      disabled: true
 
     # Read-only Plugin list tab in the Settings Plugins section; the built-in
     # bundles the sidebar page leaves out are inspected here.
