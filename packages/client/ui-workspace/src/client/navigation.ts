@@ -232,21 +232,7 @@ class UiWorkspaceService extends Service implements UiWorkspace {
       : undefined
     const target = workspaceId ?? currentWorkspaceId ?? recent
     if (target === undefined) {
-      // PaperLab: no workspace context — fall back to the durable default
-      // workspace (created idempotently on first use) so every new session
-      // lands somewhere browsable instead of dying silently.
-      const navigation = AbortSignal.any([this.ctx.layout.beginNavigation(), this.lifetime.signal])
-      void this.initializeDefaultWorkspace(navigation)
-        .then(prepared => {
-          if (navigation.aborted) return
-          const fallback = prepared?.workspaceId
-            ?? this.workspaces.list.getSnapshot().items[0]?.workspaceId
-          if (fallback === undefined) throw new Error('no default workspace available')
-          return this.openWorkspace(fallback)
-        })
-        .catch((reason: unknown) => {
-          if (!navigation.aborted) this.notify({ kind: 'createFailed', message: creationFailureMessage(reason) })
-        })
+      this.clearMain()
       return
     }
     void this.openWorkspace(target).catch(
