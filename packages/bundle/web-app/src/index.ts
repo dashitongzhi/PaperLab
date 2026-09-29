@@ -40,7 +40,8 @@ const WEB_RUNTIME_SERVICE = 'webRuntime'
 /** Services required before the web runtime can mount. */
 export const inject = ['webServer']
 
-import { readdir, readFile } from 'node:fs/promises'
+import { readdir, readFile, writeFile as fsWriteFile, mkdir, rm } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 
 /** PaperLab skills root inside this repository (built-in pipeline skills). */
 const PAPERLAB_SKILLS_ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../paperlab/skills')
@@ -299,6 +300,157 @@ export function apply(ctx: Context, config: Config): void {
           } catch { /* skip dirs without SKILL.md */ }
         }
         json(res, 200, { skills })
+      } catch (error) {
+        json(res, 500, { error: String(error) })
+      }
+    },
+  })
+
+  // PaperLab workflows library: session-independent CRUD over JSON files in
+  // <home>/workflows/, seeded with one built-in paper pipeline on first read.
+  ctx.webServer.register({
+    kind: 'prefix',
+    path: '/api/paperlab/workflows',
+    handler: async (_req, res) => {
+      const home = process.env.DSH_HOME ?? join(process.env.HOME ?? '~', '.paperlab-app')
+      const workflowsRoot = process.env.PAPERLAB_WORKFLOWS_ROOT ?? join(home, 'workflows')
+      const requestUrl = _req.url ?? ''
+      const pathPart = requestUrl.replace('/api/paperlab/workflows', '').split('?')[0] ?? ''
+      const pathId = decodeURIComponent(pathPart.replace(/^\//, '').split('/')[0] ?? '')
+      const writeFile = async (path: string, body: string): Promise<void> => {
+        await mkdir(dirname(path), { recursive: true })
+        await fsWriteFile(path, body, 'utf8')
+      }
+      const seedBuiltIn = async (): Promise<void> => {
+        const seedPath = join(workflowsRoot, 'paper-pipeline.json')
+        if (existsSync(seedPath)) return
+        const steps = [
+          { id: 's1', title: '选题侦查', skill: 'topic-scan',
+            instruction: '用 paperlab 工具链检索 arXiv/OpenAlex 近期文献，给出 3 个候选题与缺口分析；每条引用必须过 CrossRef 反查后才可写入选题依据。' },
+          { id: 's2', title: '数据导入', skill: 'data-forge',
+            instruction: '用 packages/paperlab/tools/import/paperlab-import.mjs 导入用户数据，生成 D### manifest 与数据画像；数据卡先给用户确认再进入写作。' },
+          { id: 's3', title: '研究计划', skill: 'paper-plan',
+            instruction: '基于 manifest 画像产出可执行计划与禁止声明清单：哪些结论必须等实验完成，哪些只能写成研究设计。' },
+          { id: 's4', title: '实验与图表', skill: 'data-forge',
+            instruction: '跑分析脚本产出图表；图表必须过正确性规则（claim-title 逐行校验、缺失值不进统计），每图绑定数据 manifest 指针。' },
+          { id: 's5', title: '叙事审查', skill: '',
+            instruction: '以 handling-editor 视角审图表叙事弧（hook→mechanism→evidence→application）：给出 kill_list 与 missing_panels，收敛到「愿意送审」。' },
+          { id: 's6', title: '正文写作', skill: 'paper-write',
+            instruction: '按 venue 骨架逐节写作；每节完成后用 paperlab-compile 编译，段落与 claim-evidence 台账行挂钩，禁止无证据句。' },
+          { id: 's7', title: '引用与台账', skill: 'claim-ledger',
+            instruction: 'paperlab-citation check 全部 verified；paperlab-ledger 覆盖全部结论；draft/gap 状态不得写成定论。' },
+          { id: 's8', title: '审计与提交', skill: 'paper-audit',
+            instruction: 'paperlab-audit 必须 PASS（BLOCKED 则按 fix_suggestion 修复后重跑）；qa-check 出 qa.json；人工确认后才 paperlab-submit。' },
+        ]
+        const workflow = {
+          id: 'paper-pipeline',
+          name: '论文全流程',
+          description: '从选题到投稿的五阶段证据优先流水线（内置，整合 cscience 方法论）。',
+          builtIn: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          steps,
+        }
+        await writeFile(seedPath, JSON.stringify(workflow, null, 2) + '\n')
+      }
+      const readWorkflow = async (id: string): Promise<{ ok: boolean; value?: unknown; error?: string }> => {
+        if (!/^[\w.-]+$/.test(id)) return { ok: false, error: 'invalid id' }
+        const path = join(workflowsRoot, `${id}.json`)
+        if (!existsSync(path)) return { ok: false, error: 'not found' }
+        try {
+          return { ok: true, value: JSON.parse(await readFile(path, 'utf8')) }
+        } catch (error) { return { ok: false, error: String(error) } }
+      }
+      try {
+        await mkdir(workflowsRoot, { recursive: true })
+        await seedBuiltIn()
+        // POST /workflows/<id>/copy — duplicate (allowed for built-in; the
+        // copy is editable). Returns the new id.
+        // POST /workflows — create a user-authored workflow from a full body.
+        if (_req.method === 'POST' && pathId === '') {
+          const chunks: Buffer[] = []
+          for await (const chunk of _req) chunks.push(chunk as Buffer)
+          let input: { id?: string; name?: string; description?: string; steps?: unknown[] } = {}
+          try { input = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}') } catch { /* bad body */ }
+          const id = (/^[\w-]+$/.test(input.id ?? '') ? input.id : `custom-${Date.now()}`) as string
+          const workflow = { id, name: input.name?.trim() || '未命名工作流',
+            description: input.description ?? '', builtIn: false,
+            createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+            steps: Array.isArray(input.steps) ? input.steps : [] }
+          await writeFile(join(workflowsRoot, `${id}.json`), JSON.stringify(workflow, null, 2) + '\n')
+          return json(res, 200, { ok: true, id })
+        }
+        if (_req.method === 'POST' && pathPart.endsWith('/copy') && pathId !== '') {
+          const source = await readWorkflow(pathId)
+          if (!source.ok) return json(res, 404, { error: source.error })
+          const sourceValue = source.value as Record<string, unknown>
+          const copy = { ...sourceValue, builtIn: false,
+            id: `${pathId}-copy-${Date.now()}`,
+            name: `${(sourceValue.name as string | undefined) ?? pathId} 副本`,
+            createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+          await writeFile(join(workflowsRoot, `${copy.id as string}.json`), JSON.stringify(copy, null, 2) + '\n')
+          return json(res, 200, { ok: true, id: copy.id })
+        }
+        if (_req.method === 'POST' && pathPart.endsWith('/run') && pathId !== '') {
+          const source = await readWorkflow(pathId)
+          if (!source.ok) return json(res, 404, { error: source.error })
+          const workflow = source.value as { name?: string; steps?: Array<{ title?: string; instruction?: string; skill?: string }> }
+          const lines = (workflow.steps ?? []).map((step, index) => {
+            const skill = step.skill ? `（技能：${step.skill}）` : ''
+            return `${index + 1}. ${step.title ?? ''}${skill}\n   ${step.instruction ?? ''}`
+          })
+          const prompt = `请按以下工作流「${workflow.name ?? pathId}」执行，逐步推进并在每步完成后汇报：\n${lines.join('\n')}`
+          return json(res, 200, { ok: true, prompt })
+        }
+        if (pathId !== '') {
+          if (_req.method === 'PUT') {
+            const existing = await readWorkflow(pathId)
+            if (!existing.ok) return json(res, 404, { error: existing.error })
+            if ((existing.value as { builtIn?: boolean }).builtIn === true) {
+              return json(res, 403, { error: '内置工作流只读，请先另存为副本' })
+            }
+            const chunks: Buffer[] = []
+            for await (const chunk of _req) chunks.push(chunk as Buffer)
+            let input: { name?: string; description?: string; steps?: unknown[] } = {}
+            try { input = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}') } catch { /* bad body */ }
+            const current = existing.value as Record<string, unknown>
+            const updated = { ...current,
+              name: input.name?.trim() || (current.name as string ?? pathId),
+              description: input.description ?? current.description,
+              steps: Array.isArray(input.steps) ? input.steps : current.steps,
+              updatedAt: new Date().toISOString() }
+            await writeFile(join(workflowsRoot, `${pathId}.json`), JSON.stringify(updated, null, 2) + '\n')
+            return json(res, 200, { ok: true })
+          }
+          if (_req.method === 'DELETE') {
+            const existing = await readWorkflow(pathId)
+            if (!existing.ok) return json(res, 404, { error: existing.error })
+            if ((existing.value as { builtIn?: boolean }).builtIn === true) {
+              return json(res, 403, { error: '内置工作流不可删除' })
+            }
+            await rm(join(workflowsRoot, `${pathId}.json`))
+            return json(res, 200, { ok: true })
+          }
+          const single = await readWorkflow(pathId)
+          if (!single.ok) return json(res, 404, { error: single.error })
+          return json(res, 200, { workflow: single.value })
+        }
+        const entries = await readdir(workflowsRoot, { withFileTypes: true })
+        const workflows = []
+        for (const entry of entries) {
+          if (!entry.isFile() || !entry.name.endsWith('.json')) continue
+          try {
+            const parsed = JSON.parse(await readFile(join(workflowsRoot, entry.name), 'utf8')) as {
+              id?: string; name?: string; description?: string; builtIn?: boolean
+              updatedAt?: string; steps?: unknown[]
+            }
+            workflows.push({ id: parsed.id ?? entry.name.replace(/\.json$/, ''), name: parsed.name ?? entry.name,
+              description: parsed.description ?? '', stepCount: Array.isArray(parsed.steps) ? parsed.steps.length : 0,
+              builtIn: parsed.builtIn === true, updatedAt: parsed.updatedAt ?? '' })
+          } catch { /* skip malformed files */ }
+        }
+        workflows.sort((left, right) => (left.builtIn === right.builtIn ? 0 : left.builtIn ? -1 : 1))
+        return json(res, 200, { workflows })
       } catch (error) {
         json(res, 500, { error: String(error) })
       }

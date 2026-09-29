@@ -1,0 +1,364 @@
+/* Workflow center: the SkillsPanel visual system (page column, group cards,
+   row editors, toasts) carrying PaperLab's palette (warm paper, coral
+   accent, serif titles). */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  box-sizing: border-box;
+  height: 100%;
+  overflow: auto;
+  padding: 48px clamp(24px, 4vw, 48px) 48px;
+  color: var(--dsw-alias-label-primary, #1f2328);
+  background: var(--dsw-alias-bg-base, #faf7f0);
+}
+
+.page > * {
+  width: 100%;
+  max-width: 860px;
+}
+
+.pageHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pageTitle {
+  margin: 0;
+  font-family: var(--dsw-font-family-brand, Georgia, serif);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.pageIntro {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+}
+
+.intro {
+  margin: 0;
+  font-size: 13px;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.card:hover {
+  border-color: var(--paperlab-accent, #d97757);
+}
+
+.cardMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.cardTitle {
+  font-family: var(--dsw-font-family-brand, Georgia, serif);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--paperlab-accent-soft, rgba(217, 119, 87, 0.12));
+  color: var(--paperlab-accent, #d97757);
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.cardDesc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+}
+
+.cardMeta {
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary, #9ca3af);
+}
+
+.cardActions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.runButton,
+.chipDanger {
+  padding: 5px 14px;
+  border: 0;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.runButton {
+  background: var(--paperlab-accent, #d97757);
+  color: #fff;
+}
+
+.runButton:hover {
+  background: var(--paperlab-accent-hover, #c4633f);
+}
+
+.chipDanger {
+  background: transparent;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
+  color: var(--dsw-alias-label-secondary, #6b7280);
+}
+
+.chipDanger:hover {
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+.detailTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.backButton {
+  padding: 5px 12px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
+  border-radius: 7px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.nameInput {
+  flex: 1;
+  padding: 7px 12px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
+  border-radius: 8px;
+  background: #fff;
+  font-family: var(--dsw-font-family-brand, Georgia, serif);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.descInput {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 12.5px;
+  resize: vertical;
+}
+
+.stepList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stepCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.stepHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--paperlab-accent-soft, rgba(217, 119, 87, 0.12));
+  color: var(--paperlab-accent, #d97757);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.stepTitle {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 10px;
+  border: 1px solid var(--dsw-alias-border-l3, #eee9de);
+  border-radius: 6px;
+  background: transparent;
+  font-family: var(--dsw-font-family-brand, Georgia, serif);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.stepSkill {
+  max-width: 140px;
+  padding: 5px 8px;
+  border: 1px solid var(--dsw-alias-border-l3, #eee9de);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+}
+
+.stepMove,
+.stepRemove {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+  cursor: pointer;
+}
+
+.stepMove:disabled,
+.stepRemove:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.stepMove:hover:not(:disabled),
+.stepRemove:hover:not(:disabled) {
+  background: var(--paperlab-accent-soft, rgba(217, 119, 87, 0.12));
+  color: var(--paperlab-accent, #d97757);
+}
+
+.stepInstruction {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--dsw-alias-border-l3, #eee9de);
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12.5px;
+  line-height: 19px;
+  resize: vertical;
+}
+
+.addStep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border: 1px dashed var(--dsw-alias-border-l3, #e5e0d5);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.addStep:hover {
+  color: var(--paperlab-accent, #d97757);
+  border-color: var(--paperlab-accent, #d97757);
+}
+
+.editorActions {
+  display: flex;
+  gap: 10px;
+}
+
+.primaryButton {
+  padding: 8px 20px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--paperlab-accent, #d97757);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primaryButton:hover {
+  background: var(--paperlab-accent-hover, #c4633f);
+}
+
+.secondaryButton {
+  padding: 8px 16px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.empty {
+  padding: 40px;
+  border: 1px dashed var(--dsw-alias-border-l2, #e5e0d5);
+  border-radius: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--dsw-alias-label-tertiary, #9ca3af);
+}
+
+.toastOk,
+.toastBad {
+  position: fixed;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
+  box-shadow: 0 8px 24px rgba(31, 35, 40, 0.12);
+  font-size: 13px;
+}
+
+.toastOk {
+  color: #15803d;
+}
+
+.toastBad {
+  color: #b91c1c;
+}
