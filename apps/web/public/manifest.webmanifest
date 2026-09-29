@@ -1,6 +1,6 @@
 {
-  "name": "DeepSeek Harness",
-  "short_name": "DSH",
+  "name": "PaperLab",
+  "short_name": "PaperLab",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

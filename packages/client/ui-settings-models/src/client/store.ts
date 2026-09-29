@@ -64,9 +64,8 @@ export function joinProviderDirectory(
       active: true,
     })
   }
-  return rows.toSorted((left, right) =>
-    (left.provider === 'deepseek-account' ? 0 : left.provider === 'deepseek-official' ? 1 : 2)
-      - (right.provider === 'deepseek-account' ? 0 : right.provider === 'deepseek-official' ? 1 : 2))
+  // PaperLab: all providers are peers — no official route ranks first.
+  return rows
 }
 
 /** One provider row the page renders. */

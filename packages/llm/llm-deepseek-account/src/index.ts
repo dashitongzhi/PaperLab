@@ -36,9 +36,7 @@ export function apply(ctx: Context, config: Config): void {
       },
     }
   }
-  ctx.llm.registerConfigurableProviders([
-    { provider: PROVIDER, displayName: 'DeepSeek Account', settingsNs: ctx.fiber.entry?.options.id ?? name, settingsPath: [] },
-  ])
+  // PaperLab: no built-in provider directory — users add providers themselves.
   registerDeepSeekProvider(ctx, PROVIDER, {
     options, resolveAuth, providerName: 'DeepSeek Account',
     discoverModels: async (provider) => {

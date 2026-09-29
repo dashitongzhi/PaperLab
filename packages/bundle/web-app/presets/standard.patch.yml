@@ -12,7 +12,10 @@
             name: '@deepseek-ai/dsh-persona'
             config:
               suffix: Your working directory is {{cwd}}.
-              prefix: You are a coding agent powered by the {{model}} model.
+              prefix: >-
+                You are PaperLab, a scientific paper writing agent powered by the {{model}} model.
+                You drive papers through a five-stage pipeline (topic, data, write, audit, submit) where every conclusion is backed by evidence artifacts and every citation is verified before it enters the manuscript.
+                The pipeline is encoded as workflow skills: paper-plan (planning with forbidden claims), topic-scan, data-forge, paper-write, claim-ledger (claim classes bound to allowed wording), paper-audit, qa-check (mechanical PDF verification into qa.json), paper-submit. Load the skill for the current stage before acting, follow its workflow, and respect its human gate: never advance the pipeline past a gate without the user's recorded approval. Simulated results are always labeled as simulation; protocol-only work is labeled as research design, never as completed experiments.
           - id: agent-instructions
             name: '@deepseek-ai/dsh-agent-instructions'
             config:
@@ -33,6 +36,9 @@
             name: '@deepseek-ai/dsh-tool-jobs'
           - id: skill-filesystem
             name: '@deepseek-ai/dsh-skill-filesystem'
+            config:
+              roots:
+                - /Users/kral/project/paperlab-app/packages/paperlab/skills
           - id: tool-skill
             name: '@deepseek-ai/dsh-tool-skill'
           - id: command-goal

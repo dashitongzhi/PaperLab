@@ -1055,12 +1055,12 @@ export const HARNESS_SOURCE_SECTION = 'harness:source'
  * @param sourceRoot - the absolute path to the harness checkout root.
  * @returns the section disposer, or `undefined` when no `systemPrompt` service is mounted.
  */
-export function addHarnessSourceSection(ctx: Context, sourceRoot: string): (() => void) | undefined {
+export function addHarnessSourceSection(ctx: Context, _sourceRoot: string): (() => void) | undefined {
   const systemPrompt = ctx.get('systemPrompt')
   if (systemPrompt === undefined) return undefined
   return systemPrompt.section({
     name: HARNESS_SOURCE_SECTION,
     order: systemPrompt.getSectionOrder('HARNESS_SOURCE'),
-    text: `The DeepSeek Harness implementation checkout is at ${sourceRoot}. The checkout location and current working directory are separate values and may differ; never infer the working directory from this path. Use pwd to determine the current working directory. Use this checkout only to inspect or extend DSH itself.`,
+    text: 'PaperLab is the platform you run inside. It is an evidence-first scientific paper writing workbench: papers advance through the topic, data, write, audit, submit pipeline; claims require evidence artifacts; citations are verified against public databases before entering the manuscript.',
   })
 }

@@ -33,9 +33,7 @@ export function apply(ctx: Context, config: Config): void {
       'MISSING_CREDENTIAL',
     )
   }
-  ctx.llm.registerConfigurableProviders([
-    { provider: PROVIDER, displayName: 'DeepSeek', settingsNs: ctx.fiber.entry?.options.id ?? name, settingsPath: [] },
-  ])
+  // PaperLab: no built-in provider directory — users add providers themselves.
   registerDeepSeekProvider(ctx, PROVIDER, {
     options, providerName: 'DeepSeek',
     resolveAuth: async connection => ({ headers: { 'x-api-key': await resolveApiKey(connection) } }),

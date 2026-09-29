@@ -43,6 +43,10 @@ export type { ConnectionIndicatorState } from './ConnectionIndicator.tsx'
 export { FishLogo, FISH_LOGO_PATH, FISH_LOGO_VIEWBOX } from './FishLogo.tsx'
 export { BrandWordmark } from './BrandWordmark.tsx'
 export type { BrandWordmarkProps } from './BrandWordmark.tsx'
+export { PaperLabMark } from './PaperLabMark.tsx'
+export type { PaperLabMarkProps } from './PaperLabMark.tsx'
+export { PaperLabWordmark } from './PaperLabWordmark.tsx'
+export type { PaperLabWordmarkProps } from './PaperLabWordmark.tsx'
 export {
   PermissionIconFullAccessMedium, PermissionIconFullAccessRegular,
   PermissionIconReadOnlyMedium, PermissionIconReadOnlyRegular,

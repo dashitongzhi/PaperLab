@@ -40,6 +40,12 @@ const WEB_RUNTIME_SERVICE = 'webRuntime'
 /** Services required before the web runtime can mount. */
 export const inject = ['webServer']
 
+import { readdir, readFile } from 'node:fs/promises'
+
+/** PaperLab skills root inside this repository (built-in pipeline skills). */
+const PAPERLAB_SKILLS_ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../paperlab/skills')
+
+
 /** Plugin config: composed deployment settings plus per-invocation command-line values. */
 export interface Config {
   /** Permit default-browser handoff after the Loader tree settles; an SSH launch suppresses it. */
@@ -136,12 +142,12 @@ function webSurfacePrompt(webUrl: string): string {
   const updateContract = 'The client-plugin HMR receiver is active, but client-plugin changes reload without a refresh only while '
     + '`pnpm run dev:web` is also running from this same checkout to rebuild their bundles; verify that watcher before promising automatic updates. '
     + 'Every other change — the apps/web shell and plain packages — requires rebuilding the affected Web artifacts and verifying this existing URL after a page refresh. '
-  return `You are interacting with the user through the DeepSeek Harness Web GUI at ${webUrl}. `
-    + 'When the user refers to "this page", "this GUI", or "this app" without naming another target, they mean this GUI. '
+  return `You are interacting with the user through the PaperLab workbench at ${webUrl}. `
+    + 'When the user refers to "this page", "this app", or "the workbench" without naming another target, they mean this PaperLab workbench. '
     + 'The browser provides no implicit DOM, route, or screenshot context. '
     + updateContract
     + 'Starting another server does not update this GUI. '
-    + 'The apps/web Vite entry builds the shell but is not a standalone application because only dsh web injects window.__DSH_BOOT__. '
+    + ''
     + 'Do not start a replacement server unless the user asks; if one is needed, use a managed background job and verify its exact URL.'
 }
 
@@ -224,6 +230,80 @@ export const internals: {
  */
 export function apply(ctx: Context, config: Config): void {
   const runtime = resolveLanTrust(ctx.webServer.host, config.trustedHosts)
+
+  // PaperLab skills library: platform-level HTTP API (session-independent).
+  ctx.webServer.register({
+    kind: 'prefix',
+    path: '/api/paperlab/skills',
+    handler: async (_req, res) => {
+      const skillsRoot = process.env.PAPERLAB_SKILLS_ROOT ?? PAPERLAB_SKILLS_ROOT
+      try {
+        const requestUrl = _req.url ?? ''
+        // POST /api/paperlab/skills/install — install from a git URL, or
+        // author a new skill from a natural-language description (the description
+        // is returned as a ready-to-run session prompt; the agent writes SKILL.md).
+        if (_req.method === 'POST' && requestUrl.includes('/api/paperlab/skills/install')) {
+          const chunks: Buffer[] = []
+          for await (const chunk of _req) chunks.push(chunk as Buffer)
+          let input: { url?: string; name?: string; description?: string; body?: string } = {}
+          try { input = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}') } catch { /* bad body */ }
+          if (input.url !== undefined && input.url.trim() !== '') {
+            const raw = input.url.trim()
+            if (!/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+/.test(raw)) return json(res, 400, { error: '仅支持 GitHub 仓库链接' })
+            const url = raw.replace(/\.git$/, '')
+            const skillName = url.split('/').pop() ?? `skill-${Date.now()}`
+            const { execFile } = await import('node:child_process')
+            const skillsRoot = process.env.PAPERLAB_SKILLS_ROOT ?? PAPERLAB_SKILLS_ROOT
+            const dest = join(skillsRoot, skillName)
+            execFile('git', ['clone', '--depth', '1', url, dest], { timeout: 60_000 }, (err) => {
+              if (err) return json(res, 500, { error: `克隆失败: ${String(err.message)}` })
+              json(res, 200, { ok: true, name: skillName })
+            })
+            return
+          }
+          if (input.name !== undefined && input.name.trim() !== '') {
+            const { execFile } = await import('node:child_process')
+            const { writeFile } = await import('node:fs/promises')
+            const skillsRoot = process.env.PAPERLAB_SKILLS_ROOT ?? PAPERLAB_SKILLS_ROOT
+            const skillName = input.name.trim()
+            const dest = join(skillsRoot, skillName)
+            const front = ['---', `name: ${skillName}`, 'description: >-',
+              ...(input.description ?? '用户自定义技能').split('\n').map(l => `  ${l}`), '---', '', input.body ?? ''].join('\n')
+            execFile('mkdir', ['-p', dest], { timeout: 10_000 }, (err) => {
+              if (err) return json(res, 500, { error: `创建目录失败: ${String(err.message)}` })
+              void writeFile(join(dest, 'SKILL.md'), front, 'utf8').then(() => json(res, 200, { ok: true, name: skillName }))
+                .catch((e: unknown) => json(res, 500, { error: String(e) }))
+            })
+            return
+          }
+          return json(res, 400, { error: '需要 url 或 name 字段' })
+        }
+        if (requestUrl.includes('/api/paperlab/skills/content/')) {
+          const rawName = (requestUrl.split('/api/paperlab/skills/content/')[1] ?? '').split('?')[0]
+          const name = sanitizeName(decodeURIComponent(rawName ?? ''))
+          const md = await readFile(join(skillsRoot, name, 'SKILL.md'), 'utf8')
+          return json(res, 200, { name, content: md })
+        }
+        const entries = await readdir(skillsRoot, { withFileTypes: true })
+        const skills = []
+        for (const entry of entries) {
+          if (!entry.isDirectory()) continue
+          try {
+            const md = await readFile(join(skillsRoot, entry.name, 'SKILL.md'), 'utf8')
+            const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(md)
+            const pick = (key: string): string => {
+              const m = fm?.[1] ? new RegExp(`^${key}:\\s*(.+)$`, 'm').exec(fm[1]) : undefined
+              return m?.[1]?.trim() ?? ''
+            }
+            skills.push({ name: pick('name') || entry.name, description: pick('description'), dir: entry.name })
+          } catch { /* skip dirs without SKILL.md */ }
+        }
+        json(res, 200, { skills })
+      } catch (error) {
+        json(res, 500, { error: String(error) })
+      }
+    },
+  })
   // The loopback URL belongs to this host. Under SSH, the operator reaches it
   // through a local forwarding address that this process cannot derive.
   const handoffBrowser = config.openBrowser && !launchedThroughSsh(launchEnvironmentOf(ctx))
@@ -298,4 +378,17 @@ export function apply(ctx: Context, config: Config): void {
       }
     })
   }
+}
+
+/** Send one JSON response and close it. */
+function json(res: import('node:http').ServerResponse, status: number, body: unknown): void {
+  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' })
+  res.end(JSON.stringify(body))
+}
+
+/** Allow only safe directory names (no traversal, no separators). */
+function sanitizeName(raw: string): string {
+  const name = raw.replace(/[^a-zA-Z0-9_-]/g, '')
+  if (name !== raw || name === '' || name.startsWith('.')) throw new Error('invalid skill name')
+  return name
 }

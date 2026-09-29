@@ -424,9 +424,9 @@ export class SystemPrompt extends Service {
     // Keep harness-owned openers independent of the selected loop plugin.
     if (config.includeHarnessIdentity ?? true) {
       this.section({
-        name: 'harness:identity',
+        name: 'paperlab:identity',
         order: this.getSectionOrder('HARNESS_IDENTITY'),
-        text: 'You are an AI agent powered by DeepSeek Harness.',
+        text: 'You are PaperLab, an evidence-first scientific paper writing agent. Every claim you write is paired with an evidence artifact; every citation is verified; every stage has a human gate.',
       })
     }
     this.section({
