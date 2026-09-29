@@ -1,0 +1,68 @@
+{
+  "id": "paper-pipeline",
+  "name": "PaperLab 论文流水线",
+  "description": "证据优先的五阶段论文工作流：每个结论绑定证据工件，每条引用先核验，每道闸门人工放行。",
+  "builtin": true,
+  "stages": [
+    {
+      "id": "topic",
+      "name": "选题扫描",
+      "goal": "从文献中找到可做、可证、有价值的研究点",
+      "tools": ["paperlab topic-scan（arXiv/OpenAlex 检索）", "literature-review 技能（引用图谱双向展开）"],
+      "steps": [
+        "检索近 2-3 年相关工作，记录检索词与数据库（literature-provenance 工件）",
+        "用引用图谱向前/向后各走一步，补齐综述与最新进展",
+        "产出 3-5 个候选研究点，每个标注：新意、风险、所需数据"
+      ],
+      "gate": "人工确认选题方向，记录到 human-review-gates"
+    },
+    {
+      "id": "data",
+      "name": "数据导入",
+      "goal": "把用户数据变成可追溯、可核验的证据",
+      "tools": ["paperlab-import（csv/tsv/json/xlsx 导入+画像）", "overlap 检查（数据泄漏拦截）"],
+      "steps": [
+        "paperlab-import 导入数据，生成 D### 清单（manifest/data-card/traceability，sha256 固定）",
+        "多数据集两两做重叠检查，超阈值即拦截",
+        "导入产生的每个论点写入 claim-evidence 台账（status=supported，指针指 manifest）"
+      ],
+      "gate": "人工确认数据来源与授权，台账无 gap"
+    },
+    {
+      "id": "write",
+      "name": "写作",
+      "goal": "逐节成稿，段落与证据挂钩，禁止无证据断言",
+      "tools": ["paper-write 技能（段落骨架）", "paperlab-compile（每节一编译）", "paperlab-ledger"],
+      "steps": [
+        "按 venue 骨架逐节写作：Introduction 走 Hook→Background→Gap→This Work→Contribution",
+        "每个结论句先查台账：无证据支撑就先补实验/数据，或降级为 draft 并明说",
+        "每节写完立即 paperlab-compile，warnings 结构化回流，零错误才进下一节"
+      ],
+      "gate": "无"
+    },
+    {
+      "id": "audit",
+      "name": "审计",
+      "goal": "fail-closed 质量门：假引用/无证据结论/占位符全部拦截",
+      "tools": ["paperlab-citation check（CrossRef/arXiv 核验）", "paperlab-audit（PASS/BLOCKED + 修复命令）"],
+      "steps": [
+        "paperlab-citation check：全部 DOI 必须反查成功，unverified 清零",
+        "paperlab-audit：verdict 必须 PASS；BLOCKED 时按 fix_suggestion 逐条修复后重跑",
+        "（可选）三审稿人 Swarm：方法学家/领域专家/挑剔读者 + meta-review + 修订计划"
+      ],
+      "gate": "audit PASS + 人工放行"
+    },
+    {
+      "id": "submit",
+      "name": "投稿",
+      "goal": "产出可投递的完整包，投稿决定永远由作者做出",
+      "tools": ["venue-match（MethodsX/JOSS/arXiv 模板）", "paperlab-compile（终版 PDF）"],
+      "steps": [
+        "套用 venue 模板生成终版，编译 0 错 0 警",
+        "打包 PDF + .tex + refs.bib + figures + cover letter",
+        "导出全部完整性工件（6 类 schema）作为投稿附件"
+      ],
+      "gate": "作者逐篇确认投递"
+    }
+  ]
+}

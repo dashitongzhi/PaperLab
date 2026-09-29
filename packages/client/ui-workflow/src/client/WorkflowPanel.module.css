@@ -1,5 +1,5 @@
-/* Workflow center: the SkillsPanel visual system (page column, group cards,
-   row editors, toasts) carrying PaperLab's palette (warm paper, coral
+/* Workflow center: the SkillsPanel visual system (page column, cards, stage
+   pipeline detail, toasts) carrying PaperLab's palette (warm paper, coral
    accent, serif titles). */
 
 .page {
@@ -45,7 +45,26 @@
 .intro {
   margin: 0;
   font-size: 13px;
+  line-height: 20px;
   color: var(--dsw-alias-label-secondary, #6b7280);
+}
+
+.refreshButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+  cursor: pointer;
+}
+
+.refreshButton:hover {
+  color: var(--paperlab-accent, #d97757);
+  border-color: var(--paperlab-accent, #d97757);
 }
 
 .cards {
@@ -79,6 +98,10 @@
   text-align: left;
   cursor: pointer;
   color: inherit;
+}
+
+.cardMark {
+  display: none;
 }
 
 .cardTitle {
@@ -122,7 +145,11 @@
 }
 
 .runButton,
-.chipDanger {
+.chipAdd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   padding: 5px 14px;
   border: 0;
   border-radius: 7px;
@@ -140,21 +167,21 @@
   background: var(--paperlab-accent-hover, #c4633f);
 }
 
-.chipDanger {
+.chipAdd {
   background: transparent;
   border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
   color: var(--dsw-alias-label-secondary, #6b7280);
 }
 
-.chipDanger:hover {
-  color: #b91c1c;
-  border-color: #fca5a5;
+.chipAdd:hover {
+  color: var(--paperlab-accent, #d97757);
+  border-color: var(--paperlab-accent, #d97757);
 }
 
 .detailTop {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .backButton {
@@ -166,146 +193,30 @@
   cursor: pointer;
 }
 
+.detailName {
+  font-family: var(--dsw-font-family-brand, Georgia, serif);
+  font-size: 20px;
+  font-weight: 600;
+}
+
 .nameInput {
   flex: 1;
+  min-width: 0;
   padding: 7px 12px;
   border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
   border-radius: 8px;
   background: #fff;
   font-family: var(--dsw-font-family-brand, Georgia, serif);
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
 }
 
-.descInput {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
-  border-radius: 8px;
-  background: #fff;
-  font-size: 12.5px;
-  resize: vertical;
-}
-
-.stepList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.stepCard {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px;
-  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
-  border-radius: 10px;
-  background: #fff;
-}
-
-.stepHead {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.stepIndex {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: var(--paperlab-accent-soft, rgba(217, 119, 87, 0.12));
-  color: var(--paperlab-accent, #d97757);
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.stepTitle {
+.spacer {
   flex: 1;
-  min-width: 0;
-  padding: 5px 10px;
-  border: 1px solid var(--dsw-alias-border-l3, #eee9de);
-  border-radius: 6px;
-  background: transparent;
-  font-family: var(--dsw-font-family-brand, Georgia, serif);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.stepSkill {
-  max-width: 140px;
-  padding: 5px 8px;
-  border: 1px solid var(--dsw-alias-border-l3, #eee9de);
-  border-radius: 6px;
-  background: #fff;
-  font-size: 12px;
-}
-
-.stepMove,
-.stepRemove {
-  width: 24px;
-  height: 24px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--dsw-alias-label-secondary, #6b7280);
-  cursor: pointer;
-}
-
-.stepMove:disabled,
-.stepRemove:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.stepMove:hover:not(:disabled),
-.stepRemove:hover:not(:disabled) {
-  background: var(--paperlab-accent-soft, rgba(217, 119, 87, 0.12));
-  color: var(--paperlab-accent, #d97757);
-}
-
-.stepInstruction {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--dsw-alias-border-l3, #eee9de);
-  border-radius: 6px;
-  background: transparent;
-  font-size: 12.5px;
-  line-height: 19px;
-  resize: vertical;
-}
-
-.addStep {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px;
-  border: 1px dashed var(--dsw-alias-border-l3, #e5e0d5);
-  border-radius: 10px;
-  background: transparent;
-  color: var(--dsw-alias-label-secondary, #6b7280);
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.addStep:hover {
-  color: var(--paperlab-accent, #d97757);
-  border-color: var(--paperlab-accent, #d97757);
-}
-
-.editorActions {
-  display: flex;
-  gap: 10px;
 }
 
 .primaryButton {
-  padding: 8px 20px;
+  padding: 7px 18px;
   border: 0;
   border-radius: 8px;
   background: var(--paperlab-accent, #d97757);
@@ -320,12 +231,247 @@
 }
 
 .secondaryButton {
-  padding: 8px 16px;
+  padding: 7px 14px;
   border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
   border-radius: 8px;
   background: #fff;
   font-size: 13px;
   cursor: pointer;
+}
+
+.descInput {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 12.5px;
+  resize: vertical;
+}
+
+.usage {
+  padding: 10px 14px;
+  border: 1px solid var(--paperlab-accent-soft, rgba(217, 119, 87, 0.12));
+  border-radius: 10px;
+  background: var(--paperlab-accent-soft, rgba(217, 119, 87, 0.06));
+  font-size: 12.5px;
+  line-height: 19px;
+}
+
+.pipeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.stageCard {
+  display: flex;
+  gap: 14px;
+}
+
+.stageRail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 26px;
+  flex-shrink: 0;
+}
+
+.stageDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--paperlab-accent, #d97757);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.stageLine {
+  flex: 1;
+  width: 2px;
+  margin: 4px 0;
+  background: var(--dsw-alias-border-l2, #e5e0d5);
+}
+
+.stageBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border: 1px solid var(--dsw-alias-border-l2, #e5e0d5);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.stageHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stageName {
+  font-family: var(--dsw-font-family-brand, Georgia, serif);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.stageNameInput {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 10px;
+  border: 1px solid var(--dsw-alias-border-l3, #eee9de);
+  border-radius: 6px;
+  font-family: var(--dsw-font-family-brand, Georgia, serif);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gateBadge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--paperlab-accent-soft, rgba(217, 119, 87, 0.12));
+  color: var(--paperlab-accent, #d97757);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.stageTools2 {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.stageGoal {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 19px;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+}
+
+.stageGoalInput {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--dsw-alias-border-l3, #eee9de);
+  border-radius: 6px;
+  font-size: 12.5px;
+}
+
+.toolChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.toolChip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--dsw-alias-bg-base, #faf7f0);
+  border: 1px solid var(--dsw-alias-border-l3, #eee9de);
+  font-size: 11.5px;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+}
+
+.toolChipInput {
+  width: 220px;
+  max-width: 100%;
+  padding: 3px 8px;
+  border: 1px solid var(--dsw-alias-border-l3, #eee9de);
+  border-radius: 999px;
+  font-size: 11.5px;
+}
+
+.stepsList {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12.5px;
+  line-height: 19px;
+}
+
+.stepsList li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepInput {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--dsw-alias-border-l3, #eee9de);
+  border-radius: 6px;
+  font-size: 12.5px;
+}
+
+.stepBtn {
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.stepBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.stepBtn:hover:not(:disabled) {
+  background: var(--paperlab-accent-soft, rgba(217, 119, 87, 0.12));
+  color: var(--paperlab-accent, #d97757);
+}
+
+.gateRow {
+  display: flex;
+}
+
+.gateInput {
+  flex: 1;
+  box-sizing: border-box;
+  padding: 5px 10px;
+  border: 1px solid var(--dsw-alias-border-l3, #eee9de);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.gateText {
+  font-size: 12px;
+  color: var(--paperlab-accent, #d97757);
+}
+
+.addStage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  margin-left: 40px;
+  border: 1px dashed var(--dsw-alias-border-l3, #e5e0d5);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.addStage:hover {
+  color: var(--paperlab-accent, #d97757);
+  border-color: var(--paperlab-accent, #d97757);
 }
 
 .empty {

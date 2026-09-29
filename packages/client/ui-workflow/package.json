@@ -1,6 +1,6 @@
 {
-  "name": "@deepseek-ai/dsh-client-ui-paperlab-workflow",
-  "description": "PaperLab workflow center: browse, edit, and run paper-writing workflows (built-in paper pipeline + user-authored)",
+  "name": "@deepseek-ai/dsh-client-ui-workflow",
+  "description": "PaperLab workflow center: the built-in evidence-first paper pipeline, editable and gate-guarded",
   "version": "0.1.0",
   "private": true,
   "type": "module",

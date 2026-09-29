@@ -305,10 +305,9 @@
     - id: ui-paperlab
       name: '@deepseek-ai/dsh-client-ui-paperlab'
 
-    # PaperLab workflow center: browse/edit/run paper workflows
-    # (built-in pipeline + user-authored copies).
-    - id: ui-paperlab-workflow
-      name: '@deepseek-ai/dsh-client-ui-paperlab-workflow'
+    # PaperLab workflow center: the built-in paper pipeline, editable.
+    - id: ui-workflow
+      name: '@deepseek-ai/dsh-client-ui-workflow'
 
     - id: ui-attachment
       name: '@deepseek-ai/dsh-client-ui-attachment'
