@@ -19,7 +19,7 @@ import clsx from 'clsx'
 import {
   Button, IconArchiveCheckOutlineRegular, IconArchiveOffOutlineRegular, IconArchiveOutlineRegular,
   IconChevronsUpDownOutlineRegular, IconClockOutlineRegular, IconCloseFillRegular,
-  IconFlatListOutlineRegular, IconFolderCloseRegular, IconProjectAddOutlineRegular,
+  IconEditOutlineRegular, IconFlatListOutlineRegular, IconFolderCloseRegular, IconProjectAddOutlineRegular,
   IconQueueOutlineRegular, IconSearchOutlineRegular, IconSlidersTwoOutlineRegular,
   IconWorkspaceTreeOutlineRegular, Menu, Modal, Toast, Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -1284,6 +1284,20 @@ export function WorkspaceBrowser({
           {/* Adding is the button's one action, so a composition with no
               picking affordance has nothing to offer here: the region hides the
               button rather than leaving a dead one in the header. */}
+          {/* PaperLab: standalone ad-hoc session — a chat with no workspace
+              folder, Codex-style. Sits beside the add-workspace button. */}
+          <Tooltip label={t('session.standalone')} side="bottom" delayMs={500}>
+            <button
+              type="button"
+              className={css.iconButton}
+              aria-label={t('session.standalone')}
+              onClick={() => {
+                startSession()
+              }}
+            >
+              <IconEditOutlineRegular size={wide ? 16 : 18} />
+            </button>
+          </Tooltip>
           {directoryFlowAvailable && (
             <Tooltip label={t('workspace.add')} shortcutKeys={addShortcut?.keys} side="bottom" delayMs={500}>
               <button

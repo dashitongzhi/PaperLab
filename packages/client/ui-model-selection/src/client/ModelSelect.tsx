@@ -78,9 +78,9 @@ export function ModelSelect(
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
   const id = useId()
 
-  const groups = useMemo(() => state.groups.toSorted((left, right) =>
-    (left.id === 'deepseek-account' ? 0 : left.id === 'deepseek-official' ? 1 : 2)
-      - (right.id === 'deepseek-account' ? 0 : right.id === 'deepseek-official' ? 1 : 2)), [state.groups])
+  // PaperLab: no provider-priority ordering — configured providers render in
+  // catalog order; unconfigured catalogs render no groups at all.
+  const groups = useMemo(() => [...state.groups], [state.groups])
   const choices = useMemo(() => groups.flatMap(group =>
     group.models.map(model => ({
       group,
@@ -194,7 +194,9 @@ export function ModelSelect(
   }, [open, pane, state])
   /* jscpd:ignore-end */
 
-  if (!available) return null
+  // PaperLab: hide the seat entirely until at least one provider is configured —
+  // no configured providers means nothing to pick, never a built-in fallback.
+  if (!available || state.groups.length === 0) return null
 
   const show = (): void => {
     triggerRef.current?.focus()

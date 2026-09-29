@@ -401,22 +401,29 @@ html[data-platform='darwin'] body[data-ds-dark-theme] {
   --dsw-specific-menu: rgba(48, 49, 54, 0.94);
 }
 
-/* PaperLab display typography: serif headings over the warm paper canvas.
-   Coral accent (#d97757) for primary actions and selected states. */
+/* PaperLab typography: Source Serif 4 everywhere (headings AND body) over the
+   warm paper canvas — the Claude-style serif reading experience. Code stays
+   JetBrains Mono. Coral accent (#d97757) for primary actions and selected
+   states. */
 body {
   --paperlab-accent: #d97757;
   --paperlab-accent-hover: #c4633f;
   --paperlab-accent-soft: rgba(217, 119, 87, 0.12);
+  font-family: var(--dsw-font-family-brand);
 }
 
 h1,
 h2,
 h3,
+h4,
+h5,
+h6,
 .paperlab-serif-title,
 [data-panel-title],
-section h1,
-section h2,
-section h3 {
+button,
+input,
+select,
+textarea {
   font-family: var(--dsw-font-family-brand);
   letter-spacing: -0.01em;
 }

@@ -4,8 +4,8 @@
  * font stack deliberately omits a bare `monospace` tail (Windows CJK falls
  * back to SimSun otherwise). */
 :root {
-  --dsw-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
-    'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --dsw-font-family: 'Source Serif 4', Georgia, 'Songti SC',
+    'Noto Serif SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', ui-serif, serif;
   /* PaperLab display face: self-hosted Source Serif 4 (variable, OFL) with
      Georgia/System CJK serif fallbacks for missing glyphs. */
   --dsw-font-family-brand: 'Source Serif 4', Georgia, 'Songti SC',
