@@ -1,0 +1,67 @@
+% PaperLab venue template: MethodsX (methodological protocol article)
+% Minimal compilable skeleton — article class, common packages only.
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{hyperref}
+
+\title{TITLE: A Reproducible Protocol for METHOD on TASK}
+\author{AUTHOR NAME\thanks{Affiliation; email@example.com}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent PLACEHOLDER-ABSTRACT: State the methodological problem, what this protocol delivers,
+the inputs it consumes, the outputs it produces, and how each step is verified.
+MethodsX articles describe a method that is new or substantially improved,
+with enough detail for another lab to reproduce it without specialist knowledge.
+\\[2mm]
+\textbf{Keywords:} keyword one; keyword two; keyword three
+\end{abstract}
+
+\section{Background}
+PLACEHOLDER-BACKGROUND: why the method is needed and what current approaches lack.
+
+\section{Method}
+PLACEHOLDER-METHOD: the protocol itself, step by step. Reference figures as
+Figure~\ref{fig:placeholder} and tables as Table~\ref{tab:placeholder}.
+
+\begin{figure}[t]
+\centering
+% \includegraphics[width=0.9\linewidth]{figures/figure1.pdf}
+\caption{PLACEHOLDER-CAPTION: what the reader should see.}
+\label{fig:placeholder}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{PLACEHOLDER-TABLE: tool/parameter matrix.}
+\label{tab:placeholder}
+\begin{tabular}{lll}
+\toprule
+Step & Tool & Parameter \\
+\midrule
+1 & PLACEHOLDER & PLACEHOLDER \\
+2 & PLACEHOLDER & PLACEHOLDER \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Validation}
+PLACEHOLDER-VALIDATION: how correctness is checked (metrics, ground truth, seeds)
+and the exact numbers the validation produced.
+
+\section{Conclusions}
+PLACEHOLDER-CONCLUSIONS: what the protocol adds; limitations; where it should not be used.
+
+\section*{Declarations}
+PLACEHOLDER-DECLARATIONS: funding, conflicts of interest, data availability.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

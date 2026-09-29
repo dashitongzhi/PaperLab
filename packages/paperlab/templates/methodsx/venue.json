@@ -1,0 +1,7 @@
+{
+  "venue": "MethodsX",
+  "template_id": "methodsx-protocol-v1",
+  "description": "Methodological protocol article: new or improved method with validation. Minimal article-class skeleton; MethodsX expects structured protocol detail (background / method / validation / declarations).",
+  "compile_hint": "engine=tectonic; natbib + plainnat; citations verified via paperlab_citation_check before \\bibliography enters refs.bib",
+  "sections": ["Background", "Method", "Validation", "Conclusions", "Declarations"]
+}

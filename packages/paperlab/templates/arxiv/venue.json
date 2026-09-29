@@ -1,0 +1,7 @@
+{
+  "venue": "arXiv",
+  "template_id": "arxiv-preprint-v1",
+  "description": "arXiv preprint skeleton: Introduction (Hook/Background/Gap/This Work/Contributions), Related Work, Methods, Results, Discussion, Conclusion. No peer review -- every number must trace to an artifact.",
+  "compile_hint": "engine=tectonic; natbib + plainnat; arXiv accepts PDF upload -- compile locally, check the figure audit before submission",
+  "sections": ["Introduction", "Related Work", "Methods", "Results", "Discussion", "Conclusion"]
+}

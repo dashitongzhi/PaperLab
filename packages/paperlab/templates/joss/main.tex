@@ -1,0 +1,51 @@
+% PaperLab venue template: JOSS (Journal of Open Source Software)
+% Minimal compilable skeleton — article class, common packages only.
+% Note: real JOSS uses the `dgemc`/`agujournaltemplate` class at submission time;
+% this skeleton keeps the paper compilable everywhere with zero exotic packages.
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{hyperref}
+
+\title{TITLE: software-name — one-line statement of what it does}
+\author{AUTHOR NAME\thanks{Affiliation; email@example.com} \and AUTHOR TWO\thanks{Affiliation}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent PLACEHOLDER-ABSTRACT-SUMMARY: JOSS papers are short (500--1000 words) descriptions of
+research software with existing academic use. State the problem, the software,
+and the referenceable DOI release. Reviewers check installation, usage, and tests,
+not novelty.
+\\[2mm]
+\textbf{Keywords:} keyword one; keyword two
+\end{abstract}
+
+\section{Summary}
+PLACEHOLDER-SUMMARY: the problem domain, why existing tools fall short, and what
+this software provides.
+
+\section{Statement of need}
+PLACEHOLDER-NEED: who uses it, for what task, and the gap it fills
+(see Figure~\ref{fig:placeholder}).
+
+\begin{figure}[t]
+\centering
+% \includegraphics[width=0.85\linewidth]{figures/figure1.pdf}
+\caption{PLACEHOLDER-CAPTION: overview of the software and its workflow.}
+\label{fig:placeholder}
+\end{figure}
+
+\section{Availability}
+PLACEHOLDER-AVAILABILITY: repository URL, archived DOI (Zenodo), license,
+and the exact version reviewed. State the test suite and CI status.
+
+\section{References}
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

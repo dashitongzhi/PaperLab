@@ -1,0 +1,76 @@
+% PaperLab venue template: arXiv preprint
+% Minimal compilable skeleton — article class, common packages only.
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{hyperref}
+
+\title{TITLE: Full Descriptive Title of the Preprint}
+\author{AUTHOR ONE\thanks{Affiliation; email@example.com} \and AUTHOR TWO\thanks{Affiliation}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent PLACEHOLDER-ABSTRACT: what was done, how it was validated, and the headline
+numbers. arXiv has no peer review; every number in this abstract must trace to a
+script output, table, or figure in the manuscript.
+\\[2mm]
+\textbf{Keywords:} keyword one; keyword two; keyword three
+\end{abstract}
+
+\section{Introduction}
+PLACEHOLDER-INTRO-HOOK: the concrete problem. PLACEHOLDER-BACKGROUND: what exists.
+PLACEHOLDER-GAP: what is missing. PLACEHOLDER-THIS-WORK: what this preprint contributes.
+Contributions:
+\begin{enumerate}
+\item PLACEHOLDER-CONTRIBUTION-1;
+\item PLACEHOLDER-CONTRIBUTION-2;
+\item PLACEHOLDER-CONTRIBUTION-3.
+\end{enumerate}
+
+\section{Related Work}
+PLACEHOLDER-RELATED: positioned by comparison, not by list~\citep{keyref1}.
+
+\section{Methods}
+PLACEHOLDER-METHODS: setup, parameters, seeds, and the exact commands that
+regenerate every result (see Figure~\ref{fig:placeholder}).
+
+\begin{figure}[t]
+\centering
+% \includegraphics[width=0.9\linewidth]{figures/figure1.pdf}
+\caption{PLACEHOLDER-CAPTION: the main result.}
+\label{fig:placeholder}
+\end{figure}
+
+\section{Results}
+PLACEHOLDER-RESULTS: numbers with pointers to the artifact that produced them
+(Table~\ref{tab:placeholder}).
+
+\begin{table}[t]
+\centering
+\caption{PLACEHOLDER-TABLE: headline results.}
+\label{tab:placeholder}
+\begin{tabular}{lrr}
+\toprule
+Setting & Metric A & Metric B \\
+\midrule
+PLACEHOLDER & 0.00 & 0.00 \\
+PLACEHOLDER & 0.00 & 0.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion}
+PLACEHOLDER-DISCUSSION: what the numbers mean, limitations, and honest boundaries.
+
+\section{Conclusion}
+PLACEHOLDER-CONCLUSION.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

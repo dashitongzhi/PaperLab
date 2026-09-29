@@ -1,0 +1,7 @@
+{
+  "venue": "JOSS",
+  "template_id": "joss-software-paper-v1",
+  "description": "Journal of Open Source Software short paper: 500-1000 word description of research software with an archived DOI release. Review criteria: installation, usage, tests, community standards.",
+  "compile_hint": "engine=tectonic; natbib + plainnat; final submission swaps to the official JOSS class but this skeleton stays compilable with zero exotic packages",
+  "sections": ["Summary", "Statement of need", "Availability"]
+}
