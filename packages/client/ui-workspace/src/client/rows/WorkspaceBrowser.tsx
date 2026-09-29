@@ -607,15 +607,18 @@ function SessionTree({
     )
   }
 
-  // PaperLab: two sibling sections — standalone sessions (the ungrouped
-  // bucket) and workspace projects — each with its own header and add button,
-  // so a plain chat never lives under a folder and a paper project never
-  // looks like a chat.
-  const standaloneGroups = rootGroups.filter(group => group.workspaceId === undefined)
+  // PaperLab: two sibling sections — standalone sessions and workspace
+  // projects. Sessions render FLAT (one row per chat, no folder group header):
+  // deriveFlat over the ungrouped ids, exactly the single-list presentation.
   const workspaceGroups = rootGroups.filter(group => group.workspaceId !== undefined)
+  const standaloneRows = useMemo(
+    () => deriveFlat(list, ungroupedSessionIds, rowState, statuses),
+    [list, ungroupedSessionIds, rowState, statuses],
+  )
+  const standaloneNow = Date.now()
   const groupRows = (
     <>
-      {(standaloneGroups.length > 0 || workspaceGroups.length === 0) && (
+      {(standaloneRows.length > 0 || workspaceGroups.length === 0) && (
         <div className={css.listSection} data-section="sessions">
           <div className={css.listSectionHead}>
             <span className={css.listSectionTitle}>{t('section.sessions')}</span>
@@ -630,8 +633,23 @@ function SessionTree({
               </button>
             </Tooltip>
           </div>
-          {standaloneGroups.length > 0
-            ? standaloneGroups.map(group => renderGroup(group, 0))
+          {standaloneRows.length > 0
+            ? standaloneRows.map(node => (
+              <SessionNodeItem
+                key={node.id}
+                node={node}
+                currentId={current}
+                now={standaloneNow}
+                onOpen={open}
+                onRenameRequest={onSessionRenameRequest}
+                renderSlot={renderSlot}
+                onReveal={node.id === revealSessionId
+                  ? () => { onSessionRevealed(node.id) }
+                  : undefined}
+                drag={undefined}
+                t={t}
+              />
+            ))
             : <div className={css.listSectionEmpty}>{t('session.standalone.empty')}</div>}
         </div>
       )}
