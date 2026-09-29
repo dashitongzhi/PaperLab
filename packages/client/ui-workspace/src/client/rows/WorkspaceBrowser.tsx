@@ -19,9 +19,9 @@ import clsx from 'clsx'
 import {
   Button, IconArchiveCheckOutlineRegular, IconArchiveOffOutlineRegular, IconArchiveOutlineRegular,
   IconChevronsUpDownOutlineRegular, IconClockOutlineRegular, IconCloseFillRegular,
-  IconFlatListOutlineRegular, IconFolderCloseRegular, IconProjectAddOutlineRegular,
+  IconProjectAddOutlineRegular,
   IconQueueOutlineRegular, IconSearchOutlineRegular, IconSlidersTwoOutlineRegular,
-  IconWorkspaceTreeOutlineRegular, Menu, Modal, Toast, Tooltip,
+  Menu, Modal, Toast, Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type {
   SessionListState, SessionSearchResultItem,
@@ -38,7 +38,7 @@ import {
 } from '../tree.ts'
 import { ProjectRowItem, SearchResultItem, SessionNodeItem } from './Rows.tsx'
 import { AnimatedRows } from './AnimatedRows.tsx'
-import { FLAT_SESSION_ORDER_KEY, type SessionGroupBy } from '../stores.ts'
+import { FLAT_SESSION_ORDER_KEY } from '../stores.ts'
 import { WorkspacePickFlow } from '../WorkspacePicker.tsx'
 import css from './WorkspaceBrowser.module.css'
 
@@ -103,11 +103,9 @@ function useNativeDragAcceptance(active: boolean): void {
 }
 
 /** Grouping, ordering, and archived-filter menu; own open state so it resets with the wide chrome. */
-function ViewOptionsMenu({ groupBy, orderBy, archivedFilter, onGroupPick, onOrderPick, onArchivedFilterPick, t }: {
-  groupBy: SessionGroupBy
+function ViewOptionsMenu({ orderBy, archivedFilter, onOrderPick, onArchivedFilterPick, t }: {
   orderBy: SessionOrderBy
   archivedFilter: ArchivedFilter
-  onGroupPick: (mode: SessionGroupBy) => void
   onOrderPick: (mode: SessionOrderBy) => void
   onArchivedFilterPick: (filter: ArchivedFilter) => void
   t: WorkspaceBrowserProps['t']
@@ -118,11 +116,8 @@ function ViewOptionsMenu({ groupBy, orderBy, archivedFilter, onGroupPick, onOrde
       open={open}
       onClose={() => { setOpen(false) }}
       items={[
-        { type: 'label' as const, id: 'group-by', text: t('groupBy.label') },
-        { id: 'workspace', label: t('groupBy.workspace'), icon: <IconFolderCloseRegular /> },
-        { id: 'workspace-tree', label: t('groupBy.workspaceTree'), icon: <IconWorkspaceTreeOutlineRegular /> },
-        { id: 'flat', label: t('groupBy.flat'), icon: <IconFlatListOutlineRegular /> },
-        { type: 'separator' as const, id: 'order-by-separator' },
+        // PaperLab: the group-by chooser is removed — the sidebar has one
+        // canonical presentation (workspace groups).
         { type: 'label' as const, id: 'order-by', text: t('orderBy.label') },
         { id: 'manual', label: t('orderBy.manual'), icon: <IconChevronsUpDownOutlineRegular /> },
         { id: 'updated', label: t('orderBy.updated'), icon: <IconClockOutlineRegular /> },
@@ -133,13 +128,11 @@ function ViewOptionsMenu({ groupBy, orderBy, archivedFilter, onGroupPick, onOrde
         { id: 'only-archived', label: t('viewOptions.onlyArchived'), icon: <IconArchiveCheckOutlineRegular /> },
       ]}
       selectedIds={[
-        groupBy,
         orderBy,
         { default: 'hide-archived', show: 'show-archived', only: 'only-archived' }[archivedFilter],
       ]}
       onSelect={(id) => {
-        if (id === 'workspace' || id === 'workspace-tree' || id === 'flat') onGroupPick(id)
-        else if (id === 'manual' || id === 'updated') onOrderPick(id)
+        if (id === 'manual' || id === 'updated') onOrderPick(id)
         else if (id === 'hide-archived') onArchivedFilterPick('default')
         else if (id === 'show-archived') onArchivedFilterPick('show')
         else if (id === 'only-archived') onArchivedFilterPick('only')
@@ -1209,7 +1202,7 @@ export function WorkspaceBrowser({
       <div className={css.sectionHeader}>
         {wide && (
           <span className={clsx(css.sectionLabel, css.wide, searchExpanded && css.sectionLabelHidden)}>
-            {groupBy === 'flat' ? t('section.sessions') : t('section.workspaces')}
+            {t('section.workspaces')}
           </span>
         )}
         {wide && (
@@ -1272,10 +1265,8 @@ export function WorkspaceBrowser({
         <div className={clsx(css.headerActions, wide && searchExpanded && css.headerActionsHidden)}>
           {wide && (
             <ViewOptionsMenu
-              groupBy={groupBy}
               orderBy={orderBy}
               archivedFilter={archivedFilter}
-              onGroupPick={actions.setGroupBy}
               onOrderPick={(mode) => { actions.setOrderBy(mode, activeSessionOrders) }}
               onArchivedFilterPick={actions.setArchivedFilter}
               t={t}
