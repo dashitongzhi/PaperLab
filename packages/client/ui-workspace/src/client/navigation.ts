@@ -232,7 +232,18 @@ class UiWorkspaceService extends Service implements UiWorkspace {
       : undefined
     const target = workspaceId ?? currentWorkspaceId ?? recent
     if (target === undefined) {
-      this.clearMain()
+      // PaperLab: no workspace context — create a standalone session (the
+      // host falls back to its default cwd; the session joins no workspace
+      // and lists under Standalone sessions) instead of doing nothing.
+      const navigation = AbortSignal.any([this.ctx.layout.beginNavigation(), this.lifetime.signal])
+      void this.sessions.create({})
+        .then(sessionId => {
+          if (navigation.aborted) return
+          this.replaceMain(sessionId, navigation, 'reveal')
+        })
+        .catch((reason: unknown) => {
+          if (!navigation.aborted) this.notify({ kind: 'createFailed', message: creationFailureMessage(reason) })
+        })
       return
     }
     void this.openWorkspace(target).catch(
