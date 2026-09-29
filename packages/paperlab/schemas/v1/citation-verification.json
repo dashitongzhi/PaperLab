@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "paperlab://schemas/v1/citation-verification.json",
+  "title": "Citation Verification",
+  "description": "Records whether each cited work has been verified against DOI / arXiv / publisher. Includes verification date and reviewer.",
+  "type": "object",
+  "required": ["citation_key", "status"],
+  "properties": {
+    "citation_key": { "type": "string", "minLength": 1 },
+    "doi":          { "type": "string" },
+    "arxiv_id":     { "type": "string" },
+    "url":          { "type": "string", "format": "uri" },
+    "status":       { "enum": ["unverified", "doi_matched", "arxiv_matched", "metadata_verified", "full_text_verified", "retracted", "cannot_locate"] },
+    "verified_date":  { "type": "string", "format": "date" },
+    "verified_by":    { "type": "string" },
+    "mismatch_notes": { "type": "string" },
+    "bibtex_hash":    { "type": "string" }
+  }
+}

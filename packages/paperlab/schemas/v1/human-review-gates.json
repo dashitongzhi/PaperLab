@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "paperlab://schemas/v1/human-review-gates.json",
+  "title": "Human Review Gate",
+  "description": "A single human-in-the-loop gate decision: which stage, who, what was approved, when, and any conditional notes.",
+  "type": "object",
+  "required": ["gate_id", "stage", "decision", "reviewer", "decided_at"],
+  "properties": {
+    "gate_id":    { "type": "string", "pattern": "^G[0-9]{3,}$" },
+    "stage":      { "enum": ["topic", "data", "write", "audit", "submit"] },
+    "decision":   { "enum": ["approved", "rejected", "needs_revision", "deferred"] },
+    "reviewer":   { "type": "string" },
+    "decided_at": { "type": "string", "format": "date-time" },
+    "conditions": { "type": "array", "items": { "type": "string" } },
+    "notes":      { "type": "string" }
+  }
+}

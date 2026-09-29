@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "paperlab://schemas/v1/claim-evidence-row.json",
+  "title": "Claim Evidence Row",
+  "description": "One row of the ClaimEvidenceLedger. Links a claim made in the paper to its evidence artifact, with section, status, and reviewer.",
+  "type": "object",
+  "required": ["claim_id", "claim_text", "evidence_status", "section"],
+  "properties": {
+    "claim_id":    { "type": "string", "pattern": "^C[0-9]{3,}$" },
+    "section":     { "enum": ["abstract", "intro", "methods", "results", "discussion", "conclusion", "supplementary"] },
+    "claim_text":  { "type": "string", "minLength": 10 },
+    "evidence_status": { "enum": ["supported", "unsupported", "gap", "draft"] },
+    "evidence_artifact": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type":    { "enum": ["table", "figure", "code_output", "literature", "human_review", "external_url"] },
+        "pointer": { "type": "string" }
+      }
+    },
+    "reviewer":   { "type": "string" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "notes":      { "type": "string" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "evidence_status": { "const": "supported" } } },
+      "then": {
+        "required": ["evidence_artifact"],
+        "properties": {
+          "evidence_artifact": {
+            "required": ["type", "pointer"]
+          }
+        }
+      }
+    }
+  ]
+}

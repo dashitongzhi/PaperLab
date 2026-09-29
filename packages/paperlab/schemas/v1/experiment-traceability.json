@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "paperlab://schemas/v1/experiment-traceability.json",
+  "title": "Experiment Traceability",
+  "description": "Per-experiment provenance: input files, code commit, parameters, environment, output checksum, manifest path. Required for any empirical claim in the paper.",
+  "type": "object",
+  "required": ["experiment_id", "inputs", "code", "output"],
+  "properties": {
+    "experiment_id": { "type": "string", "pattern": "^E[0-9]{3,}$" },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pointer", "checksum"],
+        "properties": {
+          "pointer":  { "type": "string" },
+          "checksum": { "type": "string", "description": "sha256:<hex>" },
+          "bytes":    { "type": "integer" }
+        }
+      }
+    },
+    "code": {
+      "type": "object",
+      "properties": {
+        "repo":      { "type": "string" },
+        "commit":    { "type": "string" },
+        "entrypoint":{ "type": "string" },
+        "params":    { "type": "object", "additionalProperties": true }
+      }
+    },
+    "env": {
+      "type": "object",
+      "properties": {
+        "language":    { "type": "string" },
+        "version":     { "type": "string" },
+        "dependencies":{ "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": ["pointer", "checksum"],
+      "properties": {
+        "pointer":  { "type": "string" },
+        "checksum": { "type": "string", "description": "sha256:<hex>" },
+        "rows":     { "type": "integer" },
+        "manifest": { "type": "string" }
+      }
+    },
+    "ran_at":  { "type": "string", "format": "date-time" },
+    "ran_by":  { "type": "string" },
+    "random_seed": { "type": "integer" },
+    "notes":   { "type": "string" }
+  }
+}
