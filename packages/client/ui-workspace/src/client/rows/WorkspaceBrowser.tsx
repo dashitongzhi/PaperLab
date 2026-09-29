@@ -19,7 +19,7 @@ import clsx from 'clsx'
 import {
   Button, IconArchiveCheckOutlineRegular, IconArchiveOffOutlineRegular, IconArchiveOutlineRegular,
   IconChevronsUpDownOutlineRegular, IconClockOutlineRegular, IconCloseFillRegular,
-  IconEditOutlineRegular, IconFlatListOutlineRegular, IconFolderCloseRegular, IconProjectAddOutlineRegular,
+  IconFlatListOutlineRegular, IconFolderCloseRegular, IconProjectAddOutlineRegular,
   IconQueueOutlineRegular, IconSearchOutlineRegular, IconSlidersTwoOutlineRegular,
   IconWorkspaceTreeOutlineRegular, Menu, Modal, Toast, Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -217,15 +217,13 @@ function workspaceGroupHalf(e: { clientY: number; currentTarget: HTMLElement }):
 type SessionTreeProps = Pick<
   WorkspaceBrowserProps,
   'useSessionStatus' | 'startSession' | 'open'
-  | 'insertWorkspaceBefore' | 't' | 'usePanelInfo' | 'requestAddWorkspace'
+  | 'insertWorkspaceBefore' | 't' | 'usePanelInfo'
 > & PropsRenderSlots<
   | 'sidebar.workspaces.session.menu.item'
   | 'sidebar.workspaces.session.row.action'
   | 'sidebar.session.row.leading'
   | 'sidebar.session.row.hover'
 > & {
-  /** Whether a directory picker flow can open (from the browser root's hook). */
-  directoryFlowAvailable: boolean
   shortcuts: readonly import('@deepseek-ai/dsh-client-shortcuts/client').ShortcutCatalogEntry[]
   /** Always-mounted Session list snapshot. */
   list: SessionListState
@@ -286,7 +284,6 @@ function SessionTree({
   workspaceReady, animationResetKey, usePanelInfo,
   onRenameRequest, onDeleteRequest, onSessionRenameRequest,
   renderSlot,
-  requestAddWorkspace, directoryFlowAvailable,
   insertWorkspaceBefore,
   nestWorkspaces, groupExpansion, setGroupExpanded,
   setSessionOrder, home, t,
@@ -607,74 +604,7 @@ function SessionTree({
     )
   }
 
-  // PaperLab: two sibling sections — standalone sessions and workspace
-  // projects. Sessions render FLAT (one row per chat, no folder group header):
-  // deriveFlat over the ungrouped ids, exactly the single-list presentation.
-  const workspaceGroups = rootGroups.filter(group => group.workspaceId !== undefined)
-  const standaloneRows = useMemo(
-    () => deriveFlat(list, ungroupedSessionIds, rowState, statuses),
-    [list, ungroupedSessionIds, rowState, statuses],
-  )
-  const standaloneNow = Date.now()
-  const groupRows = (
-    <>
-      {(standaloneRows.length > 0 || workspaceGroups.length === 0) && (
-        <div className={css.listSection} data-section="sessions">
-          <div className={css.listSectionHead}>
-            <span className={css.listSectionTitle}>{t('section.sessions')}</span>
-            <Tooltip label={t('session.standalone')} side="bottom" delayMs={500}>
-              <button
-                type="button"
-                className={css.listSectionAdd}
-                aria-label={t('session.standalone')}
-                onClick={() => { startSession() }}
-              >
-                <IconEditOutlineRegular size={14} />
-              </button>
-            </Tooltip>
-          </div>
-          {standaloneRows.length > 0
-            ? standaloneRows.map(node => (
-              <SessionNodeItem
-                key={node.id}
-                node={node}
-                currentId={current}
-                now={standaloneNow}
-                onOpen={open}
-                onRenameRequest={onSessionRenameRequest}
-                renderSlot={renderSlot}
-                onReveal={node.id === revealSessionId
-                  ? () => { onSessionRevealed(node.id) }
-                  : undefined}
-                drag={undefined}
-                t={t}
-              />
-            ))
-            : <div className={css.listSectionEmpty}>{t('session.standalone.empty')}</div>}
-        </div>
-      )}
-      <div className={css.listSection} data-section="workspaces">
-        <div className={css.listSectionHead}>
-          <span className={css.listSectionTitle}>{t('section.workspaces')}</span>
-          {directoryFlowAvailable && (
-            <Tooltip label={t('workspace.add')} side="bottom" delayMs={500}>
-              <button
-                type="button"
-                className={css.listSectionAdd}
-                aria-label={t('workspace.add')}
-                onClick={() => { requestAddWorkspace() }}
-              >
-                <IconProjectAddOutlineRegular size={14} />
-              </button>
-            </Tooltip>
-          )}
-        </div>
-        {workspaceGroups.length > 0
-          ? workspaceGroups.map(group => renderGroup(group, 0))
-          : <div className={css.listSectionEmpty}>{t('workspace.add.hint')}</div>}
-      </div>
-    </>
-  )
+  const groupRows = rootGroups.map(group => renderGroup(group, 0))
   return (
     <div className={clsx(css.treeBody, css.wide)}>
       {workspaceDropAtListStart && <span className={css.listTopDropIndicator} aria-hidden="true" />}
@@ -1354,20 +1284,6 @@ export function WorkspaceBrowser({
           {/* Adding is the button's one action, so a composition with no
               picking affordance has nothing to offer here: the region hides the
               button rather than leaving a dead one in the header. */}
-          {/* PaperLab: standalone ad-hoc session — a chat with no workspace
-              folder, Codex-style. Sits beside the add-workspace button. */}
-          <Tooltip label={t('session.standalone')} side="bottom" delayMs={500}>
-            <button
-              type="button"
-              className={css.iconButton}
-              aria-label={t('session.standalone')}
-              onClick={() => {
-                startSession()
-              }}
-            >
-              <IconEditOutlineRegular size={wide ? 16 : 18} />
-            </button>
-          </Tooltip>
           {directoryFlowAvailable && (
             <Tooltip label={t('workspace.add')} shortcutKeys={addShortcut?.keys} side="bottom" delayMs={500}>
               <button
@@ -1481,8 +1397,6 @@ export function WorkspaceBrowser({
                 rowState={rowState}
                 onLeaveArchivedOnly={leaveArchivedOnly}
                 startSession={startSession}
-                requestAddWorkspace={requestAddWorkspace}
-                directoryFlowAvailable={directoryFlowAvailable}
                 open={guardedOpen}
                 insertWorkspaceBefore={insertWorkspaceBefore}
                 revealSessionId={revealSessionId}
