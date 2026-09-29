@@ -62,10 +62,13 @@ def audit_project(project):
     if not ledger:
         blockers.append("Claim-evidence ledger is missing or empty.")
     else:
-        supported = [row for row in ledger if row.get("status", "").strip().lower() == "supported"]
+        def status_of(row):
+            v = row.get("evidence_status") or row.get("status") or ""
+            return v.strip().lower()
+        supported = [row for row in ledger if status_of(row) == "supported"]
         unresolved = [
             row for row in ledger
-            if row.get("status", "").strip().lower() not in {"supported", "rejected"}
+            if status_of(row) not in {"supported", "rejected"}
         ]
         if not supported:
             blockers.append("No claims are marked supported in the claim-evidence ledger.")
@@ -73,7 +76,8 @@ def audit_project(project):
             ids = [row.get("claim_id", "?") for row in unresolved]
             blockers.append("Unresolved claim rows: " + ", ".join(ids))
         for row in supported:
-            if not row.get("evidence_artifact", "").strip():
+            art = row.get("evidence_artifact") or row.get("evidence_artifact_pointer") or ""
+            if not art.strip():
                 blockers.append(f"Supported claim {row.get('claim_id', '?')} has no evidence artifact.")
 
     sources = read_csv(sources_path)

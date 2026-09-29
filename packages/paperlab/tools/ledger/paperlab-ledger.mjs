@@ -16,7 +16,7 @@ import { spawnSync } from 'node:child_process';
 
 const LEDGER_FIELDS = [
   'claim_id', 'claim_text', 'section', 'evidence_status',
-  'evidence_artifact_pointer', 'created_at',
+  'evidence_artifact_pointer', 'evidence_artifact', 'created_at',
 ];
 const SECTIONS = ['abstract', 'intro', 'methods', 'results', 'discussion', 'conclusion', 'supplementary'];
 const STATUSES = ['supported', 'draft', 'gap'];
@@ -229,6 +229,7 @@ async function cmdAdd(args) {
     section,
     evidence_status: args.status,
     evidence_artifact_pointer: args.evidence,
+    evidence_artifact: args.evidence ? { type: 'code_output', pointer: args.evidence } : undefined,
     created_at: new Date().toISOString(),
   };
   const validation = await validateRow(row, SCHEMA_DIR);
@@ -250,7 +251,11 @@ async function cmdAdd(args) {
     else if (field === 'claim_text') rowForWrite[field] = row.claim_text;
     else if (field === 'claim_id') rowForWrite[field] = row.claim_id;
     else if (field === 'created_at' || field === 'updated_at') rowForWrite[field] = row.created_at;
-    else if (field === 'evidence_artifact') rowForWrite[field] = `code_output:${row.evidence_artifact_pointer}`;
+    else if (field === 'evidence_artifact') {
+      const art = row.evidence_artifact
+      rowForWrite[field] = art && typeof art === 'object'
+        ? `${art.type}:${art.pointer}` : `code_output:${row.evidence_artifact_pointer}`
+    }
     else if (field === 'evidence_artifact_type') rowForWrite[field] = 'code_output';
     else if (field === 'evidence_artifact_pointer') rowForWrite[field] = row.evidence_artifact_pointer;
     else if (field === 'reviewer') rowForWrite[field] = 'paperlab-ledger';
