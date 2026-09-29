@@ -39,8 +39,10 @@
           - id: skill-filesystem
             name: '@deepseek-ai/dsh-skill-filesystem'
             config:
-              roots:
-                - /Users/kral/project/paperlab-app/packages/paperlab/skills
+              # Resolved against the process cwd (the repository root when the
+              # server starts per README) — keeps the tree clone-portable.
+              customSkillDirs:
+                - packages/paperlab/skills
           - id: tool-skill
             name: '@deepseek-ai/dsh-tool-skill'
           - id: command-goal
