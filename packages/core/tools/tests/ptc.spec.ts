@@ -2004,6 +2004,32 @@ describe('per-agent presentation', () => {
     expect(native.sections.some(section => section.name === 'tools:sdk')).toBe(false)
   })
 
+  it('resolves a cosmetically drifted name without reopening the collapse', async () => {
+    // Name resolution and the collapse read the SAME registered name: a drift
+    // that reached the transport through `get` while the collapse compared the
+    // requested spelling would execute a surface the mode never announced, and
+    // a drift that resolved a collapsed name would leave the denial text naming
+    // something the registry does have.
+    const { ctx } = await setup()
+    const calls = registerEcho(ctx)
+    const coded = await ctx.tools.execute({
+      signal: testToolSignal,
+      callId: ToolCallId('drifted-run-code'),
+      name: 'Run_Code',
+      arguments: { code: '1 + 1', description: 'Drifted transport name' },
+    })
+    expect(coded.error?.info?.code).not.toBe('UNKNOWN_TOOL')
+    const denied = await ctx.tools.execute({
+      signal: testToolSignal,
+      callId: ToolCallId('drifted-echo'),
+      name: '"echo"',
+      arguments: { value: 'coded' },
+    })
+    expect(denied.error?.info).toEqual({ name: 'ToolNotFoundError', code: 'UNKNOWN_TOOL' })
+    expect(denied.error?.message).toBe('unknown tool "\\"echo\\"": only `run_code` is callable directly — call `"echo"` from inside a `run_code` program instead')
+    expect(calls).toEqual([])
+  })
+
   it('inherits a STANDING preset scope\'s mode down the chain, agents beside it unaffected', async () => {
     const { bindScopeParent } = await import('@deepseek-ai/dsh-scope')
     const { ctx, systemPrompt } = await setup({ mode: 'native' })

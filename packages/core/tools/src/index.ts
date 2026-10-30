@@ -801,6 +801,19 @@ function resolveMaxParallelSubCalls(value: number | undefined): number {
 }
 
 /**
+ * Strip the wrapping one model adds around an otherwise-correct tool name:
+ * surrounding whitespace and one pair of quotes or backticks. Case is NOT
+ * folded here — only a name that still misses after this pass may fall back to
+ * a case-insensitive registry match, so a registered name is never reinterpreted.
+ * @param name - the requested tool name.
+ * @returns the bare name candidate, possibly empty.
+ */
+function unwrapToolName(name: string): string {
+  const bounds = /^[\s"'`]+|[\s"'`]+$/g
+  return name.replace(bounds, '')
+}
+
+/**
  * Tool registry and execution pipeline. Scoped registrations shadow globals;
  * one visibility resolver feeds presentation, lookup, and dispatch.
  */
@@ -1219,16 +1232,44 @@ export class ToolRuntime extends Service {
   }
 
   /**
+   * Resolve a requested name to the name a scope has registered, tolerating the
+   * cosmetic drift a model introduces around a correct name (wrapping whitespace,
+   * quotes, or backticks; then case). Resolution order is exact registration,
+   * unwrapped registration, then a case-insensitive match that must be unique —
+   * a fold that could land on two registered names resolves to neither.
+   * @param name - the tool name as the caller spelled it.
+   * @param visible - the scope's visible map, from one {@link view} traversal.
+   * @returns the registered name, or undefined when nothing resolves.
+   */
+  private registeredName(name: string, visible: ReadonlyMap<string, ToolDefinition>): string | undefined {
+    if (visible.has(name)) return name
+    const unwrapped = unwrapToolName(name)
+    if (unwrapped !== '' && visible.has(unwrapped)) return unwrapped
+    if (unwrapped === '') return undefined
+    const folded = unwrapped.toLowerCase()
+    const candidates: string[] = []
+    for (const registered of visible.keys()) {
+      if (registered.toLowerCase() === folded) candidates.push(registered)
+    }
+    return candidates.length === 1 ? candidates[0] : undefined
+  }
+
+  /**
    * Look up a tool as one scope sees it (scoped
    * shadows global; a restricted-away global reads as absent). Presenters pass
    * the calling agent so the rendered card matches the definition that
-   * actually executed.
-   * @param name - the tool name as registered.
+   * actually executed. A request whose name drifts only cosmetically resolves to
+   * the registered definition; {@link ToolNotFoundError} still reports the name
+   * exactly as it was requested, and the execution context keeps that spelling
+   * for the durable log.
+   * @param name - the tool name as the caller spelled it.
    * @param scope - the viewing scope (the agent); omitted = the global view.
    * @returns the definition the scope resolves, or undefined when none is visible.
    */
   get(name: string, scope?: ScopeKey): ToolDefinition | undefined {
-    return this.view(scope).visible.get(name)
+    const visible = this.view(scope).visible
+    const registered = this.registeredName(name, visible)
+    return registered === undefined ? undefined : visible.get(registered)
   }
 
   /**
@@ -1249,6 +1290,26 @@ export class ToolRuntime extends Service {
     if (tool === undefined) return undefined
     if (this.collapses(name, scope, nested)) return undefined
     return tool
+  }
+
+  /**
+   * Reject a call that resolves to no definition, after recording the registry
+   * facts that separate its causes. Three failures read identical to the model
+   * and to whoever debugs them: a name the registry never had, a name a
+   * restriction or shadow hid from this scope, and a scope whose registrations
+   * went missing (a profile hot-apply or a fiber disposal mid-session). The
+   * denial text keeps the requested spelling, so nothing model-visible or durable
+   * changes; only the log distinguishes them.
+   * @param name - the tool name as the caller spelled it.
+   * @param scope - the calling scope, or undefined for the global view.
+   * @returns the denial for the caller to throw or project.
+   */
+  private unknownTool(name: string, scope: ScopeKey | undefined): ToolNotFoundError {
+    const view = this.view(scope)
+    const target = unwrapToolName(name).toLowerCase()
+    const hidden = target !== '' && [...view.knownNames].some(known => known.toLowerCase() === target)
+    this.ctx.logger.warn(`tools: "${name}" resolved to no definition (scoped=${scope !== undefined}, visible=${view.visible.size}, known=${view.knownNames.size}${hidden ? ', but the registry knows this name — a restriction or shadow hid it' : ''})`)
+    return new ToolNotFoundError(name)
   }
 
   /**
@@ -1344,12 +1405,16 @@ export class ToolRuntime extends Service {
    * `dsh-agent-tool-presentation` exists for, and reading the deployment default would
    * leave exactly that agent uncollapsed — announcing one surface while
    * executing another, which is the bypass this collapse closes.
-   * @param name - the tool name as registered.
+   * @param name - the tool name as the caller spelled it.
    * @param scope - the viewing scope whose effective presentation mode applies.
    * @param nested - whether the call is a transport sub-dispatch, not a model-direct call.
    */
   private collapses(name: string, scope: ScopeKey | undefined, nested: boolean): boolean {
-    return !nested && this.modeFor(scope) === 'ptc' && name !== RUN_CODE_NAME
+    if (nested || this.modeFor(scope) !== 'ptc') return false
+    // Resolved, not raw: `Run_Code` reaches the reserved transport through
+    // {@link get}, so reading the requested spelling here would deny a call the
+    // registry accepted and announce one surface while executing another.
+    return this.registeredName(name, this.view(scope).visible) !== RUN_CODE_NAME
   }
 
   /**
@@ -1576,7 +1641,7 @@ export class ToolRuntime extends Service {
     exec.signal = signal
     try {
       const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined)
-      if (!tool) throw new ToolNotFoundError(exec.name)
+      if (!tool) throw this.unknownTool(exec.name, exec.agent)
       state.bodyInvoked = true
       const returned = await tool.execute(exec.arguments, exec)
       const result = this.createSuccessResult(exec, tool, returned)
@@ -1805,7 +1870,7 @@ export class ToolRuntime extends Service {
         throw new TypeError('tools/post-execute cannot replace the value of a failed result')
       }
       const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined)
-      if (tool === undefined) throw new ToolNotFoundError(exec.name)
+      if (tool === undefined) throw this.unknownTool(exec.name, exec.agent)
       const replaced = this.createSuccessResult(exec, tool, decision.value)
       return this.markCanonical(exec, {
         ...replaced,
@@ -1874,7 +1939,7 @@ export class ToolRuntime extends Service {
       })
     }
     const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined)
-    if (tool === undefined) throw new ToolNotFoundError(exec.name)
+    if (tool === undefined) throw this.unknownTool(exec.name, exec.agent)
     const normalized = this.createSuccessResult(exec, tool, result.value)
     return this.markCanonical(exec, {
       ...normalized,

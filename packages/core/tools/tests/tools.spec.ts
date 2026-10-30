@@ -2571,6 +2571,54 @@ describe('ToolRuntime.get', () => {
     const ctx = await setup()
     expect(ctx.tools.get('nope')).toBeUndefined()
   })
+
+  it('get() resolves a cosmetically drifted request to the registered name', async () => {
+    const ctx = await setup()
+    ctx.tools.register(echoTool)
+    // The drift a model emits around a correct name: case, padding, wrapping.
+    for (const requested of ['Echo', 'ECHO', ' echo ', '"echo"', '`echo`', '\n"Echo"\n']) {
+      expect(ctx.tools.get(requested)?.name).toBe('echo')
+    }
+  })
+
+  it('get() keeps an exact registration authoritative over a case sibling', async () => {
+    const ctx = await setup()
+    ctx.tools.register(echoTool)
+    ctx.tools.register(defineContentToolFixture({ name: 'Echo', description: '', parameters: {}, async execute() { return [] } }))
+    expect(ctx.tools.get('Echo')?.name).toBe('Echo')
+    expect(ctx.tools.get('echo')?.name).toBe('echo')
+    // A fold that could land on either sibling resolves to neither.
+    expect(ctx.tools.get('ECHO')).toBeUndefined()
+  })
+
+  it('get() leaves a request that unwraps to nothing unresolved', async () => {
+    const ctx = await setup()
+    ctx.tools.register(echoTool)
+    for (const requested of ['', '   ', '""', '```']) {
+      expect(ctx.tools.get(requested)).toBeUndefined()
+    }
+  })
+
+  it('execute() runs the resolved tool but reports the requested spelling when nothing resolves', async () => {
+    const ctx = await setup()
+    ctx.tools.register(echoTool)
+    const drifted = await ctx.tools.execute({
+      signal: testToolSignal,
+      callId: ToolCallId('drifted-name'),
+      name: ' Echo ',
+      arguments: { text: 'hi' },
+    })
+    expect(drifted.isError).toBe(false)
+    expect(drifted.value).toBe('hi')
+    // The denial text stays verbatim: what the model asked for is what it reads back.
+    const absent = await ctx.tools.execute({
+      signal: testToolSignal,
+      callId: ToolCallId('absent-name'),
+      name: '  BASH  ',
+      arguments: {},
+    })
+    expect(absent.error?.message).toBe('unknown tool "  BASH  "')
+  })
 })
 
 describe('validateArgs (the runtime-validation Agent Note, part 1)', () => {
