@@ -31,7 +31,7 @@
       name: '@deepseek-ai/dsh-skill-filesystem'
       config:
         roots:
-          - /Users/kral/project/papers/paperlab/skills
+          - /Users/kral/project/paperlab-suite/paperlab-core-plugins/paperlab-plugin/skills
 
     # ─── 2. Goal driver hint ─────────────────────────────────────────────────
     # dsh's goal driver lives in dsh-base. We contribute one goal schema so
@@ -59,7 +59,7 @@
       disabled: !!js process.platform === 'win32'
       config:
         paperlab:
-          entry: /Users/kral/project/papers/paperlab/bin/paperlab.js
+          entry: /Users/kral/project/paperlab-suite/paperlab-core-plugins/paperlab-plugin/bin/paperlab.js
           allowed_commands:
             - ledger-read
             - ledger-write

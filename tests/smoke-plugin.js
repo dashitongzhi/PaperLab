@@ -51,16 +51,16 @@ async function main() {
     logger: { info: () => {} },
   };
   await mod.apply(fakeCtx, {});
-  assert(registered.length === 19, `19 tools registered (got ${registered.length})`);
+  assert(registered.length === 20, `20 tools registered (got ${registered.length})`);
   const expected = [
     // core 7
     'paperlab-ledger-read','paperlab-ledger-write','paperlab-integrity-check',
     'paperlab-paper-audit','paperlab-venue-match','paperlab_topic_search',
     'paperlab_dataset_manifest',
-    // orchestration 6
+    // orchestration 7
     'paperlab_drive_stage','paperlab_complete_stage','paperlab_human_gate',
-    'paperlab_audit_run','paperlab_todo','paperlab_session_status',
-    // paper-specific v0.6 7
+    'paperlab_audit_run','paperlab_todo','paperlab_session_status','paperlab_rollback_stage',
+    // paper-specific v0.6 6
     'paperlab-citation-check','paperlab-bib-manage','paperlab-overlap-check',
     'paperlab-figure-audit','paperlab-run-branch','paperlab-auto-review',
   ];
