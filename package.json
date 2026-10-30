@@ -23,6 +23,7 @@
     "smoke-plugin":  "node tests/smoke-plugin.js",
     "smoke-skill":   "node tests/smoke-skill.js",
     "smoke-v6":      "node tests/smoke-v6.js",
+    "smoke-negative": "node tests/smoke-negative.js",
     "smoke-cli":     "node bin/paperlab.js venue-match --venue MethodsX",
     "smoke-bundle":  "dsh --dump-config --profile headless --patch ./dsh.plugin.yml 2>&1 | grep -E '(paperlab|not found)' || echo SMOKE_OK",
     "headless":      "dsh --profile headless --patch ./dsh.plugin.yml",

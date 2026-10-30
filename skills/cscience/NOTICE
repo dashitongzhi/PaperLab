@@ -1,0 +1,20 @@
+NOTICE for skills/cscience
+==========================
+
+This directory contains skill files (SKILL.md + kernel.py) vendored from the
+Claude Science skill catalog installed on this machine under
+`~/.claude-science/skills/`, on 2026-09-29.
+
+Each vendored SKILL.md declares in its YAML frontmatter:
+
+    license: Apache-2.0
+
+Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0):
+you may use, reproduce, modify, and redistribute these files, including for
+commercial purposes, provided the license and copyright/notices are preserved.
+The original frontmatter license lines are kept unmodified in each SKILL.md;
+this NOTICE and README.md record provenance as required.
+
+The files originate from Anthropic's Claude Science product skill catalog.
+No code was taken from github.com/Haleclipse/cscience (a BYOK patcher for the
+closed product bundle); no patched product bundle is redistributed here.
